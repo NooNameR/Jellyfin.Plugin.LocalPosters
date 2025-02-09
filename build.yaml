@@ -1,16 +1,16 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
+name: "Local Posters"
+guid: "E0FAD3EA-8996-4003-8C88-B7E77B26309A"
 version: "1.0.0.0"
-targetAbi: "10.9.0.0"
+targetAbi: "10.10.0.0"
 framework: "net8.0"
-overview: "Short description about your plugin"
+overview: "Plugin to match local posters (similar to what Kometa is doing with Plex)"
 description: >
   This is a longer description that can span more than one
   line and include details about your plugin.
 category: "General"
 owner: "jellyfin"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+- "Jellyfin.Plugin.LocalPosters.dll"
 changelog: >
   changelog

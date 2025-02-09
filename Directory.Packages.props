@@ -1,0 +1,14 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <!-- Run "dotnet list package (dash,dash)outdated" to see the latest versions of each package.-->
+    <ItemGroup Label="Package Dependencies">
+        <PackageVersion Include="Jellyfin.Common" Version="10.10.5"/>
+        <PackageVersion Include="Jellyfin.Controller" Version="10.10.5"/>
+        <PackageVersion Include="Jellyfin.Data" Version="10.10.5"/>
+        <PackageVersion Include="Jellyfin.Model" Version="10.10.5"/>
+        <PackageVersion Include="IDisposableAnalyzers" Version="4.0.8" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4" />
+    </ItemGroup>
+</Project>
