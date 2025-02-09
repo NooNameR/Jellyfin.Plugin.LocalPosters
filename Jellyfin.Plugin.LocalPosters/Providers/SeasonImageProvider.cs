@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.LocalPosters.Configuration;
+using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
+using MediaBrowser.Model.MediaInfo;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Providers;
@@ -18,6 +21,7 @@ public class SeasonImageProvider : ILocalImageProvider, IHasOrder
     private readonly PluginConfiguration _configuration;
     private readonly ILogger<SeasonImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
+    private readonly BorderReplacer _borderReplacer;
 
     /// <summary>
     ///
@@ -30,6 +34,7 @@ public class SeasonImageProvider : ILocalImageProvider, IHasOrder
         _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
+        _borderReplacer = new BorderReplacer();
     }
 
     /// <inheritdoc />
@@ -48,11 +53,11 @@ public class SeasonImageProvider : ILocalImageProvider, IHasOrder
 
         _logger.LogDebug("Trying to match assets {SeriesName}, Season: {Season}", season.SeriesName, season.IndexNumber);
         var sanitizedSeriesName = season.SeriesName.Replace(":", "", StringComparison.OrdinalIgnoreCase);
-
+        var fullName = $"{sanitizedSeriesName} ({season.ProductionYear}) - Season {season.IndexNumber}.jpg";
+        var destinationFile = _fileSystem.GetFileInfo(Path.Combine(_configuration.AssetsPath(_fileSystem).FullName, fullName));
         var seasonRegex = new Regex($@"^{sanitizedSeriesName} \({season.ProductionYear}\) - Season {season.IndexNumber}(\.[a-z]+)?$");
         var seriesRegex = new Regex($@"^{sanitizedSeriesName} \({season.Series.ProductionYear}\) - Season {season.IndexNumber}(\.[a-z]+)?$");
 
-        var result = new List<LocalImageInfo>();
         for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
         {
             foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
@@ -68,12 +73,12 @@ public class SeasonImageProvider : ILocalImageProvider, IHasOrder
 
                 _logger.LogDebug("Matched file: {FullName}", file.FullName);
 
-                result.Add(new LocalImageInfo { FileInfo = file, Type = ImageType.Primary });
-                return result;
+                _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
+                return [new LocalImageInfo { FileInfo = destinationFile, Type = ImageType.Primary }];
             }
         }
 
-        return result;
+        return [];
     }
 
     /// <inheritdoc />

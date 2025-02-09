@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.LocalPosters.Configuration;
+using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
@@ -17,6 +18,7 @@ public class MovieImageProvider : ILocalImageProvider, IHasOrder
     private readonly PluginConfiguration _configuration;
     private readonly ILogger<MovieImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
+    private readonly BorderReplacer _borderReplacer;
 
     /// <summary>
     ///
@@ -29,6 +31,7 @@ public class MovieImageProvider : ILocalImageProvider, IHasOrder
         _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
+        _borderReplacer = new BorderReplacer();
     }
 
     /// <inheritdoc />
@@ -48,6 +51,8 @@ public class MovieImageProvider : ILocalImageProvider, IHasOrder
         _logger.LogDebug("Trying to match assets {Movie}", movie.Name);
         var movieName = movie.Name.Replace(":", "", StringComparison.OrdinalIgnoreCase);
 
+        var fullName = $"{movieName} ({movie.ProductionYear}).jpg";
+        var destinationFile = _fileSystem.GetFileInfo(Path.Combine(_configuration.AssetsPath(_fileSystem).FullName, fullName));
         var regex = new Regex($@"^{movieName} \({movie.ProductionYear}\)(\.[a-z]+)?$");
 
         var result = new List<LocalImageInfo>();
@@ -65,7 +70,8 @@ public class MovieImageProvider : ILocalImageProvider, IHasOrder
 
                 _logger.LogDebug("Matched file: {FullName}", file.FullName);
 
-                result.Add(new LocalImageInfo { FileInfo = file, Type = ImageType.Primary });
+                _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
+                result.Add(new LocalImageInfo { FileInfo = destinationFile, Type = ImageType.Primary });
                 return result;
             }
         }

@@ -14,6 +14,7 @@
     <PackageReference Include="Jellyfin.Controller"/>
     <PackageReference Include="Jellyfin.Data"/>
     <PackageReference Include="Jellyfin.Model"/>
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html"/>

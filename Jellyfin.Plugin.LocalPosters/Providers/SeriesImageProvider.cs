@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.LocalPosters.Configuration;
+using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
@@ -18,6 +19,7 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
     private readonly PluginConfiguration _configuration;
     private readonly ILogger<SeriesImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
+    private readonly BorderReplacer _borderReplacer;
 
     /// <summary>
     ///
@@ -30,6 +32,7 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
         _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
+        _borderReplacer = new BorderReplacer();
     }
 
     /// <inheritdoc />
@@ -48,6 +51,8 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
 
         _logger.LogDebug("Trying to match assets {SeriesName}", series.Name);
         var sanitizedSeriesName = series.Name.Replace(":", "", StringComparison.OrdinalIgnoreCase);
+        var fullName = $"{sanitizedSeriesName} ({series.ProductionYear}).jpg";
+        var destinationFile = _fileSystem.GetFileInfo(Path.Combine(_configuration.AssetsPath(_fileSystem).FullName, fullName));
 
         var regex = new Regex($@"^{sanitizedSeriesName} \({series.ProductionYear}\)(\.[a-z]+)?$");
 
@@ -63,9 +68,10 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
                 if (!match.Success)
                     continue;
 
-                _logger.LogInformation("Matched file: {FullName}", file.FullName);
+                _logger.LogDebug("Matched file: {FullName}", file.FullName);
 
-                result.Add(new LocalImageInfo { FileInfo = file, Type = ImageType.Primary });
+                _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
+                result.Add(new LocalImageInfo { FileInfo = destinationFile, Type = ImageType.Primary });
                 return result;
             }
         }
