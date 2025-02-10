@@ -116,6 +116,10 @@ public class SeasonImageProvider : IDynamicImageProvider, IHasOrder
             yield return new Regex(
                 $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({season.ProductionYear}\)\s?[-\u2013]?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
                 RegexOptions.IgnoreCase);
+
+            yield return new Regex(
+                $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({season.Series.ProductionYear}\)\s?[-\u2013]?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
         }
     }
 }
