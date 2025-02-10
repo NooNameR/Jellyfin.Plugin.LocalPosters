@@ -61,29 +61,50 @@ public class MovieImageProvider : IDynamicImageProvider, IHasOrder
         if (item is not Movie movie) return ValueCache.Empty.Value;
 
         _logger.LogDebug("Trying to match assets {Movie}", movie.Name);
-        var movieName = movie.Name.Replace(":", "", StringComparison.OrdinalIgnoreCase);
 
-        var regex = new Regex($@"^{movieName} \({movie.ProductionYear}\)(\.[a-z]+)?$");
-
-        for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
+        foreach (var regex in Regexes())
         {
-            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
+            for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
             {
-                var match = regex.Match(file.Name);
+                foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
+                {
+                    var match = regex.Match(file.Name);
 
-                _logger.LogDebug("File match: {FileName}, success: {Success}", file.Name, match.Success);
+                    _logger.LogDebug("File match: {FileName}, success: {Success}", file.Name, match.Success);
 
-                if (!match.Success)
-                    continue;
+                    if (!match.Success)
+                        continue;
 
-                _logger.LogDebug("Matched file: {FullName}", file.FullName);
-                var destinationFile = _fileSystem.GetFileInfo(Path.Combine(movie.ContainingFolderPath, "poster.jpg"));
+                    _logger.LogDebug("Matched file: {FullName}", file.FullName);
+                    var destinationFile = _fileSystem.GetFileInfo(Path.Combine(movie.ContainingFolderPath, "poster.jpg"));
 
-                _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
-                return Task.FromResult(new DynamicImageResponse { HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File });
+                    _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
+                    return Task.FromResult(new DynamicImageResponse
+                    {
+                        HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+                    });
+                }
             }
         }
 
+        _logger.LogInformation("Was not able to match: {FileName} ({ProductionYear})", movie.Name, movie.ProductionYear);
+
         return ValueCache.Empty.Value;
+
+        IEnumerable<Regex> Regexes()
+        {
+            var sanitizedName = movie.Name.Replace($" ({movie.ProductionYear})", "", StringComparison.OrdinalIgnoreCase);
+
+            yield return new Regex($@"^{sanitizedName} \({movie.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
+            foreach (var replacement in new[] { "", "-" })
+                yield return new Regex(
+                    $@"^{sanitizedName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({movie.ProductionYear}\)(\.[a-z]+)?$",
+                    RegexOptions.IgnoreCase);
+
+            var split = sanitizedName.Split(":");
+            if (split.Length > 1)
+                yield return
+                    new Regex($@"^{split[0]} \({movie.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
+        }
     }
 }

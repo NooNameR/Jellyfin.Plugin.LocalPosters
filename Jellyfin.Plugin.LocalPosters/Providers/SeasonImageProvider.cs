@@ -59,14 +59,12 @@ public class SeasonImageProvider : IDynamicImageProvider, IHasOrder
     public Task<DynamicImageResponse> GetImage(BaseItem item, ImageType type, CancellationToken cancellationToken)
     {
         if (item is not Season season) return ValueCache.Empty.Value;
+        // Specials are not suppoerted yet
+        if (season.IndexNumber < 1) return ValueCache.Empty.Value;
 
         _logger.LogDebug("Trying to match assets {SeriesName}, Season: {Season}", season.SeriesName, season.IndexNumber);
-        var sanitizedSeriesName = season.SeriesName.Replace(":", "", StringComparison.OrdinalIgnoreCase);
 
-        var seasonRegex = new Regex($@"^{sanitizedSeriesName} \({season.ProductionYear}\) - Season {season.IndexNumber}(\.[a-z]+)?$");
-        var seriesRegex = new Regex($@"^{sanitizedSeriesName} \({season.Series.ProductionYear}\) - Season {season.IndexNumber}(\.[a-z]+)?$");
-
-        foreach (var regex in new[] { seriesRegex, seasonRegex })
+        foreach (var regex in Regexes())
         {
             for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
             {
@@ -84,11 +82,41 @@ public class SeasonImageProvider : IDynamicImageProvider, IHasOrder
                     var destinationFile = _fileSystem.GetFileInfo(Path.Combine(season.ContainingFolderPath, "poster.jpg"));
 
                     _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
-                    return Task.FromResult(new DynamicImageResponse { HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File });
+                    return Task.FromResult(new DynamicImageResponse
+                    {
+                        HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+                    });
                 }
             }
         }
 
+        _logger.LogInformation("Was not able to match: {Series} ({Year}), Season: {Season}", season.SeriesName,
+            season.Series.ProductionYear,
+            season.IndexNumber);
+
         return ValueCache.Empty.Value;
+
+        IEnumerable<Regex> Regexes()
+        {
+            var sanitizedSeriesName =
+                season.SeriesName.Replace($" ({season.Series.ProductionYear})", "", StringComparison.OrdinalIgnoreCase);
+
+            yield return
+                new Regex($@"^{sanitizedSeriesName} \({season.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                    RegexOptions.IgnoreCase);
+            yield return new Regex(
+                $@"^{sanitizedSeriesName} \({season.Series.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
+
+            foreach (var replacement in new[] { "", "-" })
+            {
+                yield return new Regex(
+                    $@"^{sanitizedSeriesName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({season.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                    RegexOptions.IgnoreCase);
+                yield return new Regex(
+                    $@"^{sanitizedSeriesName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({season.Series.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                    RegexOptions.IgnoreCase);
+            }
+        }
     }
 }

@@ -61,29 +61,46 @@ public class SeriesImageProvider : IDynamicImageProvider, IHasOrder
         if (item is not Series series) return ValueCache.Empty.Value;
 
         _logger.LogDebug("Trying to match assets {SeriesName}", series.Name);
-        var sanitizedSeriesName = series.Name.Replace(":", "", StringComparison.OrdinalIgnoreCase);
 
-        var regex = new Regex($@"^{sanitizedSeriesName} \({series.ProductionYear}\)(\.[a-z]+)?$");
-
-        for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
+        foreach (var regex in Regexes())
         {
-            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
+            for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
             {
-                var match = regex.Match(file.Name);
+                foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
+                {
+                    var match = regex.Match(file.Name);
 
-                _logger.LogDebug("File match: {FileName}, success: {Success}", file.Name, match.Success);
+                    _logger.LogDebug("File match: {FileName}, success: {Success}", file.Name, match.Success);
 
-                if (!match.Success)
-                    continue;
+                    if (!match.Success)
+                        continue;
 
-                _logger.LogDebug("Matched file: {FullName}", file.FullName);
-                var destinationFile = _fileSystem.GetFileInfo(Path.Combine(series.ContainingFolderPath, "poster.jpg"));
+                    _logger.LogDebug("Matched file: {FullName}", file.FullName);
+                    var destinationFile = _fileSystem.GetFileInfo(Path.Combine(series.ContainingFolderPath, "poster.jpg"));
 
-                _skiaSharpBorderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
-                return Task.FromResult(new DynamicImageResponse { HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File });
+                    _skiaSharpBorderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
+                    return Task.FromResult(new DynamicImageResponse
+                    {
+                        HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+                    });
+                }
             }
         }
 
+        _logger.LogInformation("Was not able to match: {Series} ({Year})", series.Name, series.ProductionYear);
+
         return ValueCache.Empty.Value;
+
+        IEnumerable<Regex> Regexes()
+        {
+            var sanitizedName = series.Name.Replace($" ({series.ProductionYear})", "", StringComparison.OrdinalIgnoreCase);
+
+            yield return
+                new Regex($@"^{sanitizedName} \({series.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
+            foreach (var replacement in new[] { "", "-" })
+                yield return new Regex(
+                    $@"^{sanitizedName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({series.ProductionYear}\)(\.[a-z]+)?$",
+                    RegexOptions.IgnoreCase);
+        }
     }
 }
