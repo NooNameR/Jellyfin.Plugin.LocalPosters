@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Local Posters Plugin Configuration</title>
+</head>
+
+<body>
+<div data-role="page" class="page type-interior pluginConfigurationPage tbsConfigurationPage"
+     data-require="emby-input,emby-button">
+    <div data-role="content">
+        <div class="content-primary">
+            <form class="tbsConfigurationPage">
+                <div class="sectionTitleContainer flex align-items-center">
+                    <h2 class="sectionTitle">Local Posters Configuration</h2>
+                </div>
+                <div class="verticalSection">
+                    <p>Manage the folder paths for your local posters. You can add or remove folders.</p>
+                    <br />
+                </div>
+
+                <!-- List Folders -->
+                <div>
+                    <h3 class="checkboxListLabel">Folders:</h3>
+                    <div id="divFolders" class="paperList checkboxList checkboxList-paperList">
+                        <!-- Existing folders will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Add Folder Button -->
+                <div>
+                    <input type="text" id="newFolder" placeholder="Enter folder path">
+                    <button is="emby-button" type="button" class="raised button-submit block emby-button" id="addFolderButton" onclick="addFolder()"><span>Add Folder</span></button>
+                </div>
+
+                <button is="emby-button" type="button" class="raised button-submit block emby-button" id="saveFoldersButton" onclick="save()"><span>Save</span></button>
+
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var pluginId = "3938fe98-b7b2-4333-b678-c4c4e339d232";
+        var config = undefined;
+
+        ApiClient.getPluginConfiguration(pluginId).then(function (savedConfig) {
+            config = savedConfig;
+
+            if (!config) {
+                config.Folders = [];
+            }
+
+            loadFolders(config.Folders);
+        });
+
+        function loadFolders(folders) {
+            var page = $.mobile.activePage;
+            var html = '';
+            folders.forEach(function (folder, index) {
+                html += '<div class="folder-entry">' +
+                    '<span>' + folder + '</span>' +
+                    ' <button type="button" onclick="removeFolder(' + index + ')">Remove</button>' +
+                    '</div>';
+            });
+            $('#divFolders', page).html(html).trigger('create');
+        }
+
+        function addFolder() {
+            var folderInput = $('#newFolder').val();
+            if (folderInput && config) {
+                config.Folders.push(folderInput);
+                save();
+            }
+        }
+
+        function removeFolder(index) {
+            if (config && config.Folders && config.Folders[index]) {
+                config.Folders.splice(index, 1);
+                save();
+            }
+        }
+
+        function save() {
+            ApiClient.updatePluginConfiguration(pluginId, config).then(function (res) {
+                Dashboard.processPluginConfigurationUpdateResult(res);
+                loadFolders(config.Folders);  // Reload the folders after saving
+            });
+        }
+    </script>
+</div>
+</body>
+
+</html>
