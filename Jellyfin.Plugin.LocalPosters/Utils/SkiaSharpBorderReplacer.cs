@@ -1,6 +1,3 @@
-using Jellyfin.Plugin.LocalPosters.Configuration;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.IO;
 using SkiaSharp;
 using static System.IO.File;
 
@@ -9,7 +6,30 @@ namespace Jellyfin.Plugin.LocalPosters.Utils;
 /// <summary>
 ///
 /// </summary>
-public class BorderReplacer
+public interface IBorderReplacer
+{
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="destination"></param>
+    /// <returns></returns>
+    string RemoveBorder(string source, string destination);
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="destination"></param>
+    /// <param name="color"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    string ReplaceBorder(string source, string destination, SKColor color);
+}
+
+/// <summary>
+///
+/// </summary>
+public class SkiaSharpBorderReplacer : IBorderReplacer
 {
     /// <summary>
     ///

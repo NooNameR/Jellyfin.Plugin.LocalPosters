@@ -5,8 +5,10 @@ using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
+using MediaBrowser.Model.MediaInfo;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Providers;
@@ -14,12 +16,12 @@ namespace Jellyfin.Plugin.LocalPosters.Providers;
 /// <summary>
 ///
 /// </summary>
-public class SeriesImageProvider : ILocalImageProvider, IHasOrder
+public class SeriesImageProvider : IDynamicImageProvider, IHasOrder
 {
     private readonly PluginConfiguration _configuration;
     private readonly ILogger<SeriesImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
-    private readonly BorderReplacer _borderReplacer;
+    private readonly SkiaSharpBorderReplacer _skiaSharpBorderReplacer;
 
     /// <summary>
     ///
@@ -32,7 +34,7 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
         _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
-        _borderReplacer = new BorderReplacer();
+        _skiaSharpBorderReplacer = new SkiaSharpBorderReplacer();
     }
 
     /// <inheritdoc />
@@ -45,18 +47,24 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
     public string Name => LocalPostersPlugin.ProviderName;
 
     /// <inheritdoc />
-    public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
+    public int Order => 1;
+
+    /// <inheritdoc />
+    public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
     {
-        if (item is not Series series) return [];
+        return [ImageType.Primary];
+    }
+
+    /// <inheritdoc />
+    public Task<DynamicImageResponse> GetImage(BaseItem item, ImageType type, CancellationToken cancellationToken)
+    {
+        if (item is not Series series) return ValueCache.Empty.Value;
 
         _logger.LogDebug("Trying to match assets {SeriesName}", series.Name);
         var sanitizedSeriesName = series.Name.Replace(":", "", StringComparison.OrdinalIgnoreCase);
-        var fullName = $"{sanitizedSeriesName} ({series.ProductionYear}).jpg";
-        var destinationFile = _fileSystem.GetFileInfo(Path.Combine(_configuration.AssetsPath(_fileSystem).FullName, fullName));
 
         var regex = new Regex($@"^{sanitizedSeriesName} \({series.ProductionYear}\)(\.[a-z]+)?$");
 
-        var result = new List<LocalImageInfo>();
         for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
         {
             foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
@@ -69,16 +77,13 @@ public class SeriesImageProvider : ILocalImageProvider, IHasOrder
                     continue;
 
                 _logger.LogDebug("Matched file: {FullName}", file.FullName);
+                var destinationFile = _fileSystem.GetFileInfo(Path.Combine(series.ContainingFolderPath, "poster.jpg"));
 
-                _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
-                result.Add(new LocalImageInfo { FileInfo = destinationFile, Type = ImageType.Primary });
-                return result;
+                _skiaSharpBorderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
+                return Task.FromResult(new DynamicImageResponse { HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File });
             }
         }
 
-        return result;
+        return ValueCache.Empty.Value;
     }
-
-    /// <inheritdoc />
-    public int Order => 1;
 }

@@ -4,8 +4,10 @@ using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
+using MediaBrowser.Model.MediaInfo;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Providers;
@@ -13,25 +15,26 @@ namespace Jellyfin.Plugin.LocalPosters.Providers;
 /// <summary>
 ///
 /// </summary>
-public class MovieImageProvider : ILocalImageProvider, IHasOrder
+public class MovieImageProvider : IDynamicImageProvider, IHasOrder
 {
     private readonly PluginConfiguration _configuration;
     private readonly ILogger<MovieImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
-    private readonly BorderReplacer _borderReplacer;
+    private readonly IBorderReplacer _borderReplacer;
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="fileSystem"></param>
+    /// <param name="borderReplacer"></param>
     public MovieImageProvider(ILogger<MovieImageProvider> logger,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem, IBorderReplacer borderReplacer)
     {
         _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
-        _borderReplacer = new BorderReplacer();
+        _borderReplacer = borderReplacer;
     }
 
     /// <inheritdoc />
@@ -44,18 +47,23 @@ public class MovieImageProvider : ILocalImageProvider, IHasOrder
     public string Name => LocalPostersPlugin.ProviderName;
 
     /// <inheritdoc />
-    public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
+    public int Order => 1;
+
+    /// <inheritdoc />
+    public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
     {
-        if (item is not Movie movie) return [];
+        return [ImageType.Primary];
+    }
+
+    /// <inheritdoc />
+    public Task<DynamicImageResponse> GetImage(BaseItem item, ImageType type, CancellationToken cancellationToken)
+    {
+        if (item is not Movie movie) return ValueCache.Empty.Value;
 
         _logger.LogDebug("Trying to match assets {Movie}", movie.Name);
         var movieName = movie.Name.Replace(":", "", StringComparison.OrdinalIgnoreCase);
 
-        var fullName = $"{movieName} ({movie.ProductionYear}).jpg";
-        var destinationFile = _fileSystem.GetFileInfo(Path.Combine(_configuration.AssetsPath(_fileSystem).FullName, fullName));
         var regex = new Regex($@"^{movieName} \({movie.ProductionYear}\)(\.[a-z]+)?$");
-
-        var result = new List<LocalImageInfo>();
 
         for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
         {
@@ -69,16 +77,13 @@ public class MovieImageProvider : ILocalImageProvider, IHasOrder
                     continue;
 
                 _logger.LogDebug("Matched file: {FullName}", file.FullName);
+                var destinationFile = _fileSystem.GetFileInfo(Path.Combine(movie.ContainingFolderPath, "poster.jpg"));
 
                 _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
-                result.Add(new LocalImageInfo { FileInfo = destinationFile, Type = ImageType.Primary });
-                return result;
+                return Task.FromResult(new DynamicImageResponse { HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File });
             }
         }
 
-        return result;
+        return ValueCache.Empty.Value;
     }
-
-    /// <inheritdoc />
-    public int Order => 1;
 }
