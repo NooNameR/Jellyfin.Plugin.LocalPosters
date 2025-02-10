@@ -21,20 +21,21 @@ public class SeriesImageProvider : IDynamicImageProvider, IHasOrder
     private readonly PluginConfiguration _configuration;
     private readonly ILogger<SeriesImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
-    private readonly SkiaSharpBorderReplacer _skiaSharpBorderReplacer;
+    private readonly IBorderReplacer _borderReplacer;
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="fileSystem"></param>
+    /// <param name="borderReplacer"></param>
     public SeriesImageProvider(ILogger<SeriesImageProvider> logger,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem, IBorderReplacer borderReplacer)
     {
         _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
-        _skiaSharpBorderReplacer = new SkiaSharpBorderReplacer();
+        _borderReplacer = borderReplacer;
     }
 
     /// <inheritdoc />
@@ -78,10 +79,12 @@ public class SeriesImageProvider : IDynamicImageProvider, IHasOrder
                     _logger.LogDebug("Matched file: {FullName}", file.FullName);
                     var destinationFile = _fileSystem.GetFileInfo(Path.Combine(series.ContainingFolderPath, "poster.jpg"));
 
-                    _skiaSharpBorderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
                     return Task.FromResult(new DynamicImageResponse
                     {
-                        HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+                        Stream = _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName),
+                        HasImage = true,
+                        Format = ImageFormat.Jpg,
+                        Protocol = MediaProtocol.File
                     });
                 }
             }
@@ -102,7 +105,7 @@ public class SeriesImageProvider : IDynamicImageProvider, IHasOrder
                 new Regex($@"^{sanitizedName} \({series.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
 
             yield return new Regex(
-                $@"^{sanitizedName.Replace(":", @"[:_\-\u2013]", StringComparison.OrdinalIgnoreCase)} \({series.ProductionYear}\)(\.[a-z]+)?$",
+                $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({series.ProductionYear}\)(\.[a-z]+)?$",
                 RegexOptions.IgnoreCase);
         }
     }

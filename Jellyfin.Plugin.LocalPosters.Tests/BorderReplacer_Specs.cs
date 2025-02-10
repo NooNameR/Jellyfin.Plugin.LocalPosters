@@ -15,18 +15,24 @@ public class SkiaSharpBorderReplacerTests
     // [Fact]
     public void TestBorderRemover()
     {
-        var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_removed" + _source.Extension);
+        var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_removed" +
+                                  _source.Extension);
         var borderReplacer = new SkiaSharpBorderReplacer();
 
-        borderReplacer.RemoveBorder(_source.FullName, target.FullName);
+        using var image = borderReplacer.RemoveBorder(_source.FullName, target.FullName);
+        using var fileStream = new FileStream(target.FullName, FileMode.Create, FileAccess.Write);
+        image.CopyTo(fileStream);
     }
 
     // [Fact]
     public void TestBorderReplacer()
     {
-        var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_replaced" + _source.Extension);
+        var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_replaced" +
+                                  _source.Extension);
         var borderReplacer = new SkiaSharpBorderReplacer();
 
-        borderReplacer.ReplaceBorder(_source.FullName, target.FullName, SKColors.SkyBlue);
+        using var image = borderReplacer.ReplaceBorder(_source.FullName, target.FullName, SKColors.SkyBlue);
+        using var fileStream = new FileStream(target.FullName, FileMode.Create, FileAccess.Write);
+        image.CopyTo(fileStream);
     }
 }

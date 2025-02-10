@@ -14,7 +14,7 @@ public interface IBorderReplacer
     /// <param name="source"></param>
     /// <param name="destination"></param>
     /// <returns></returns>
-    string RemoveBorder(string source, string destination);
+    Stream RemoveBorder(string source, string destination);
 
     /// <summary>
     ///
@@ -23,7 +23,7 @@ public interface IBorderReplacer
     /// <param name="color"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    string ReplaceBorder(string source, string destination, SKColor color);
+    Stream ReplaceBorder(string source, string destination, SKColor color);
 }
 
 /// <summary>
@@ -37,7 +37,7 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
     /// <param name="source"></param>
     /// <param name="destination"></param>
     /// <returns></returns>
-    public string RemoveBorder(string source, string destination)
+    public Stream RemoveBorder(string source, string destination)
     {
         using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);
@@ -64,11 +64,14 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
         using (var canvas = new SKCanvas(resizedImage))
         {
             canvas.DrawBitmap(cropped, new SKRect(0, 0, 1000, 1500));
-            using (var fileStream = OpenWrite(destination))
-            {
-                resizedImage.Encode(fileStream, SKEncodedImageFormat.Jpeg, 100);
-                return fileStream.Name;
-            }
+
+            // Use MemoryStream to store the result
+            var memoryStream = new MemoryStream();
+            resizedImage.Encode(memoryStream, SKEncodedImageFormat.Jpeg, 100);
+
+            // Reset the memory stream position to the start before returning
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return memoryStream;
         }
     }
 
@@ -79,7 +82,7 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
     /// <param name="color"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    public string ReplaceBorder(string source, string destination, SKColor color)
+    public Stream ReplaceBorder(string source, string destination, SKColor color)
     {
         using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);
@@ -110,11 +113,13 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
         {
             canvas.DrawBitmap(newImage, new SKRect(0, 0, 1000, 1500));
 
-            using (var fileStream = OpenWrite(destination))
-            {
-                resizedImage.Encode(fileStream, SKEncodedImageFormat.Jpeg, 100);
-                return fileStream.Name;
-            }
+            // Use MemoryStream to store the result
+            var memoryStream = new MemoryStream();
+            resizedImage.Encode(memoryStream, SKEncodedImageFormat.Jpeg, 100);
+
+            // Reset the memory stream position to the start before returning
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return memoryStream;
         }
     }
 }

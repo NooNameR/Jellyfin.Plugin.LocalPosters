@@ -78,10 +78,12 @@ public class MovieImageProvider : IDynamicImageProvider, IHasOrder
                     _logger.LogDebug("Matched file: {FullName}", file.FullName);
                     var destinationFile = _fileSystem.GetFileInfo(Path.Combine(movie.ContainingFolderPath, "poster.jpg"));
 
-                    _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName);
                     return Task.FromResult(new DynamicImageResponse
                     {
-                        HasImage = true, Path = destinationFile.FullName, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+                        Stream = _borderReplacer.RemoveBorder(file.FullName, destinationFile.FullName),
+                        HasImage = true,
+                        Format = ImageFormat.Jpg,
+                        Protocol = MediaProtocol.File
                     });
                 }
             }
@@ -101,7 +103,7 @@ public class MovieImageProvider : IDynamicImageProvider, IHasOrder
             yield return new Regex($@"^{sanitizedName} \({movie.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
 
             yield return new Regex(
-                $@"^{sanitizedName.Replace(":", @"[:_\-\u2013]", StringComparison.OrdinalIgnoreCase)} \({movie.ProductionYear}\)(\.[a-z]+)?$",
+                $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({movie.ProductionYear}\)(\.[a-z]+)?$",
                 RegexOptions.IgnoreCase);
 
             var split = sanitizedName.Split(":");
