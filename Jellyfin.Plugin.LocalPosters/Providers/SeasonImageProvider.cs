@@ -90,33 +90,30 @@ public class SeasonImageProvider : IDynamicImageProvider, IHasOrder
             }
         }
 
-        _logger.LogInformation("Was not able to match: {Series} ({Year}), Season: {Season}", season.SeriesName,
+        _logger.LogInformation("Was not able to match: {Series} ({Year}), Season: {Season}, Regex: {Regex}", season.SeriesName,
             season.Series.ProductionYear,
-            season.IndexNumber);
+            season.IndexNumber,
+            string.Join(", ", Regexes().Select(x => $"[{x}]")));
 
         return ValueCache.Empty.Value;
 
         IEnumerable<Regex> Regexes()
         {
             var sanitizedSeriesName =
-                season.SeriesName.Replace($" ({season.Series.ProductionYear})", "", StringComparison.OrdinalIgnoreCase);
+                season.SeriesName.Replace($" ({season.Series.ProductionYear})", "", StringComparison.OrdinalIgnoreCase)
+                    .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
+                    .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
 
             yield return
-                new Regex($@"^{sanitizedSeriesName} \({season.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                new Regex($@"^{sanitizedSeriesName} \({season.ProductionYear}\)\s?[-\u2013]?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
                     RegexOptions.IgnoreCase);
             yield return new Regex(
-                $@"^{sanitizedSeriesName} \({season.Series.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                $@"^{sanitizedSeriesName} \({season.Series.ProductionYear}\)\s?[-\u2013]?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
                 RegexOptions.IgnoreCase);
 
-            foreach (var replacement in new[] { "", "-" })
-            {
-                yield return new Regex(
-                    $@"^{sanitizedSeriesName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({season.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
-                    RegexOptions.IgnoreCase);
-                yield return new Regex(
-                    $@"^{sanitizedSeriesName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({season.Series.ProductionYear}\)\s?-?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
-                    RegexOptions.IgnoreCase);
-            }
+            yield return new Regex(
+                $@"^{sanitizedSeriesName.Replace(":", @"[:_\-\u2013]", StringComparison.OrdinalIgnoreCase)} \({season.ProductionYear}\)\s?[-\u2013]?\s?Season {season.IndexNumber}(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
         }
     }
 }

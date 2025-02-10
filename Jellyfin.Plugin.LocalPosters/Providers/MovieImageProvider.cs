@@ -87,19 +87,22 @@ public class MovieImageProvider : IDynamicImageProvider, IHasOrder
             }
         }
 
-        _logger.LogInformation("Was not able to match: {FileName} ({ProductionYear})", movie.Name, movie.ProductionYear);
+        _logger.LogInformation("Was not able to match: {FileName} ({ProductionYear}), Regex: {Regex}", movie.Name,
+            movie.ProductionYear, string.Join(", ", Regexes().Select(x => $"[{x}]")));
 
         return ValueCache.Empty.Value;
 
         IEnumerable<Regex> Regexes()
         {
-            var sanitizedName = movie.Name.Replace($" ({movie.ProductionYear})", "", StringComparison.OrdinalIgnoreCase);
+            var sanitizedName = movie.Name.Replace($" ({movie.ProductionYear})", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
+                .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
 
             yield return new Regex($@"^{sanitizedName} \({movie.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
-            foreach (var replacement in new[] { "", "-" })
-                yield return new Regex(
-                    $@"^{sanitizedName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({movie.ProductionYear}\)(\.[a-z]+)?$",
-                    RegexOptions.IgnoreCase);
+
+            yield return new Regex(
+                $@"^{sanitizedName.Replace(":", @"[:_\-\u2013]", StringComparison.OrdinalIgnoreCase)} \({movie.ProductionYear}\)(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
 
             var split = sanitizedName.Split(":");
             if (split.Length > 1)

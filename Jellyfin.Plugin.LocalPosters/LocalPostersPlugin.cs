@@ -33,7 +33,7 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override string Name => "Local Posters";
 
     /// <inheritdoc />
-    public override Guid Id => new("E0FAD3EA-8996-4003-8C88-B7E77B26309A");
+    public override Guid Id => new("3938fe98-b7b2-4333-b678-c4c4e339d232");
 
     /// <inheritdoc />
     public IEnumerable<PluginPageInfo> GetPages()

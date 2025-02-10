@@ -1,17 +1,17 @@
 [
     {
         "category": "Metadata",
-        "guid": "E0FAD3EA-8996-4003-8C88-B7E77B26309A",
+        "guid": "3938fe98-b7b2-4333-b678-c4c4e339d232",
         "name": "Local Posters",
         "description": "Plugin to match local posters (similar to what Kometa is doing with Plex)",
         "owner": "noonamer",
         "overview": "Using Local images find and match them to Jellyfin Posters",
         "versions": [
             {
-                "checksum": "99bacc30be0a96b9ac4159f77b944a9fc01345cb4da2a6c96b64880e30b65025",
+                "checksum": "615afc726c593cd60ed8e7b67b2e3136d037eaf8a9e745fcabe8375424432736",
                 "changelog": "initial",
                 "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/actions/runs/13246248279/artifacts/2566109726",
+                "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/actions/runs/13248117657/artifacts/2566752048",
                 "timestamp": "2025-02-10 18:00:00",
                 "version": "0.0.1.0"
             }

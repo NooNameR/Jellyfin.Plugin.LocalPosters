@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.LocalPosters.Configuration;
@@ -34,26 +33,4 @@ public class PluginConfiguration : BasePluginConfiguration
     ///
     /// </summary>
     public bool RemoveBorder { get; set; } = true;
-
-    /// <summary>
-    ///
-    /// </summary>
-    public string AssetsPath { get; set; } = "/config/data/assets";
-}
-
-/// <summary>
-///
-/// </summary>
-public static class PluginConfigurationExtensions
-{
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="pluginConfiguration"></param>
-    /// <param name="fileSystem"></param>
-    /// <returns></returns>
-    public static FileSystemMetadata AssetsPath(this PluginConfiguration pluginConfiguration, IFileSystem fileSystem)
-    {
-        return fileSystem.GetDirectoryInfo(pluginConfiguration.AssetsPath);
-    }
 }

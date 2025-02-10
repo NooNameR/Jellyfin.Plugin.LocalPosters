@@ -87,20 +87,23 @@ public class SeriesImageProvider : IDynamicImageProvider, IHasOrder
             }
         }
 
-        _logger.LogInformation("Was not able to match: {Series} ({Year})", series.Name, series.ProductionYear);
+        _logger.LogInformation("Was not able to match: {Series} ({Year}), Regex: {Regex}", series.Name, series.ProductionYear,
+            string.Join(", ", Regexes().Select(x => $"[{x}]")));
 
         return ValueCache.Empty.Value;
 
         IEnumerable<Regex> Regexes()
         {
-            var sanitizedName = series.Name.Replace($" ({series.ProductionYear})", "", StringComparison.OrdinalIgnoreCase);
+            var sanitizedName = series.Name.Replace($" ({series.ProductionYear})", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
+                .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
 
             yield return
                 new Regex($@"^{sanitizedName} \({series.ProductionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
-            foreach (var replacement in new[] { "", "-" })
-                yield return new Regex(
-                    $@"^{sanitizedName.Replace(":", replacement, StringComparison.OrdinalIgnoreCase)} \({series.ProductionYear}\)(\.[a-z]+)?$",
-                    RegexOptions.IgnoreCase);
+
+            yield return new Regex(
+                $@"^{sanitizedName.Replace(":", @"[:_\-\u2013]", StringComparison.OrdinalIgnoreCase)} \({series.ProductionYear}\)(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
         }
     }
 }
