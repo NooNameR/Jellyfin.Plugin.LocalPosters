@@ -1,7 +1,7 @@
 ---
 name: "Local Posters"
 guid: "E0FAD3EA-8996-4003-8C88-B7E77B26309A"
-version: "1.0.0.0"
+version: "0.0.1.0"
 targetAbi: "10.10.0.0"
 framework: "net8.0"
 overview: "Plugin to match local posters (similar to what Kometa is doing with Plex)"
