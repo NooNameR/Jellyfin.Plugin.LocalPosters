@@ -1,0 +1,20 @@
+[
+  {
+    "category": "General",
+    "description": "This is a longer description that can span more than one line and include details about your plugin.\n",
+    "guid": "3938fe98-b7b2-4333-b678-c4c4e339d232",
+    "name": "Local Posters",
+    "overview": "Plugin to match local posters (similar to what Kometa is doing with Plex)",
+    "owner": "jellyfin",
+    "versions": [
+      {
+        "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/commits/0.0.1.0",
+        "checksum": "0a7baaee78a39e46c44b176b537fccb4",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.1.0/local-posters_0.0.1.0.zip",
+        "targetAbi": "10.10.0.0",
+        "timestamp": "2025-02-10T21:20:15Z",
+        "version": "0.0.1.0"
+      }
+    ]
+  }
+]
