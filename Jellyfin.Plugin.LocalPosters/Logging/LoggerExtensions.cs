@@ -1,0 +1,113 @@
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
+using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Model.IO;
+using Microsoft.Extensions.Logging;
+
+namespace Jellyfin.Plugin.LocalPosters.Logging;
+
+/// <summary>
+///
+/// </summary>
+public static class LoggerExtensions
+{
+    private static readonly Action<ILogger, string, int?, string, Exception?> _missingSeasonMessage =
+        LoggerMessage.Define<string, int?, string>(LogLevel.Information, 1,
+            "Was not able to match series: {Name} ({Year}), Season: {Season}");
+
+    private static readonly Action<ILogger, string, int?, Exception?> _missingSeriesMessage =
+        LoggerMessage.Define<string, int?>(LogLevel.Information, 1, "Was not able to match series: {Name} ({Year})");
+
+    private static readonly Action<ILogger, string, int?, Exception?> _missingMovieMessage =
+        LoggerMessage.Define<string, int?>(LogLevel.Information, 1, "Was not able to match movie: {Name} ({Year})");
+
+    private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchingSeasonMessage =
+        LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 2,
+            "Matching file {FilePath} for series: {Name} ({Year}), Season: {Season}...");
+
+    private static readonly Action<ILogger, string, string, int?, Exception?> _matchingSeriesMessage =
+        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for series: {Name} ({Year})...");
+
+    private static readonly Action<ILogger, string, string, int?, Exception?> _matchingMovieMessage =
+        LoggerMessage.Define<string, string, int?>(LogLevel.Information, 2, "Matching file {FilePath} for movie: {Name} ({Year})...");
+
+    private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchedSeasonMessage =
+        LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 3,
+            "File {FilePath} match series: {Name} ({Year}), Season: {Season}");
+
+    private static readonly Action<ILogger, string, string, int?, Exception?> _matchedSeriesMessage =
+        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match series: {Name} ({Year})");
+
+    private static readonly Action<ILogger, string, string, int?, Exception?> _matchedMovieMessage =
+        LoggerMessage.Define<string, string, int?>(LogLevel.Information, 3, "File {FilePath} match movie: {Name} ({Year})");
+
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="file"></param>
+    /// <param name="item"></param>
+    public static void LogMatching(this ILogger logger, FileSystemMetadata file, BaseItem item)
+    {
+        switch (item)
+        {
+            case Season season:
+                _matchingSeasonMessage(logger, file.FullName, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear,
+                    season.Name,
+                    null);
+                break;
+            case Series series:
+                _matchingSeriesMessage(logger, file.FullName, series.Name, series.ProductionYear, null);
+                break;
+            case Movie movie:
+                _matchingMovieMessage(logger, file.FullName, movie.Name, movie.ProductionYear, null);
+                break;
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="item"></param>
+    /// <param name="file"></param>
+    public static void LogMatched(this ILogger logger, BaseItem item, FileSystemMetadata file)
+    {
+        switch (item)
+        {
+            case Season season:
+                _matchedSeasonMessage(logger, file.FullName, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear,
+                    season.Name,
+                    null);
+                break;
+            case Series series:
+                _matchedSeriesMessage(logger, file.FullName, series.Name, series.ProductionYear, null);
+                break;
+            case Movie movie:
+                _matchedMovieMessage(logger, file.FullName, movie.Name, movie.ProductionYear, null);
+                break;
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="item"></param>
+    public static void LogMissing(this ILogger logger, BaseItem item)
+    {
+        switch (item)
+        {
+            case Season season:
+                _missingSeasonMessage(logger, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear, season.Name, null);
+                break;
+            case Series series:
+                _missingSeriesMessage(logger, series.Name, series.ProductionYear, null);
+                break;
+            case Movie movie:
+                _missingMovieMessage(logger, movie.Name, movie.ProductionYear, null);
+                break;
+        }
+    }
+}

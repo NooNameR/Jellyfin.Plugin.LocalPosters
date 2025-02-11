@@ -27,9 +27,7 @@ public class SeriesMatcher : RegexMatcher
 
     static IEnumerable<Regex> Regexes(string name, int? productionYear)
     {
-        var sanitizedName = name.Replace($" ({productionYear})", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
-            .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
+        var sanitizedName = SanitizedName(name, productionYear);
 
         yield return
             new Regex($@"^{sanitizedName} \({productionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
@@ -37,5 +35,12 @@ public class SeriesMatcher : RegexMatcher
         yield return new Regex(
             $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({productionYear}\)(\.[a-z]+)?$",
             RegexOptions.IgnoreCase);
+    }
+
+    private static string SanitizedName(string name, int? productionYear)
+    {
+        return name.Replace($" ({productionYear})", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
+            .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
     }
 }

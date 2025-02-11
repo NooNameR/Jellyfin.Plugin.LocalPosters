@@ -19,6 +19,13 @@ public interface IMatcherFactory
 /// <inheritdoc />
 public class MatcherFactory : IMatcherFactory
 {
+    /// <summary>
+    ///
+    /// </summary>
+    public MatcherFactory()
+    {
+    }
+
     /// <inheritdoc />
     public IMatcher Create(BaseItem item)
     {

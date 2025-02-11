@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using MediaBrowser.Controller.Entities.TV;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
@@ -31,25 +32,25 @@ public class SeasonMatcher : RegexMatcher
     static IEnumerable<Regex> Regexes(string seriesName, int? seriesProductionYear, string seasonName,
         int? seasonProductionYear)
     {
-        var sanitizedSeriesName =
+        var name = SanitizedName(seriesName, seriesProductionYear, seasonProductionYear);
+
+        foreach (var year in new HashSet<int?> { seasonProductionYear, seriesProductionYear }.OfType<int?>())
+        {
+            yield return
+                new Regex($@"^{name} \({year}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
+                    RegexOptions.IgnoreCase);
+            yield return new Regex(
+                $@"^{name.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({year}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
+        }
+    }
+
+    private static string SanitizedName(string seriesName, int? seriesProductionYear, int? seasonProductionYear)
+    {
+        return
             seriesName.Replace($" ({seriesProductionYear})", "", StringComparison.OrdinalIgnoreCase)
                 .Replace($" ({seasonProductionYear})", "", StringComparison.OrdinalIgnoreCase)
                 .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
                 .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
-
-        yield return
-            new Regex($@"^{sanitizedSeriesName} \({seasonProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
-                RegexOptions.IgnoreCase);
-        yield return new Regex(
-            $@"^{sanitizedSeriesName} \({seriesProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
-            RegexOptions.IgnoreCase);
-
-        yield return new Regex(
-            $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({seasonProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
-            RegexOptions.IgnoreCase);
-
-        yield return new Regex(
-            $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({seriesProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
-            RegexOptions.IgnoreCase);
     }
 }

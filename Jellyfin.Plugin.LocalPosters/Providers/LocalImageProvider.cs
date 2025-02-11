@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.LocalPosters.Configuration;
+using Jellyfin.Plugin.LocalPosters.Logging;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
@@ -62,8 +63,6 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     /// <inheritdoc />
     public Task<DynamicImageResponse> GetImage(BaseItem item, ImageType type, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Trying to match assets {Name}", item.Name);
-
         var matcher = _matcherFactory.Create(item);
 
         for (var i = _configuration.Folders.Length - 1; i >= 0; i--)
@@ -72,12 +71,12 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
             {
                 var match = matcher.IsMatch(file.Name);
 
-                _logger.LogDebug("File match: {FileName}, success: {Success}", file.Name, match);
+                _logger.LogMatching(file, item);
 
                 if (!match)
                     continue;
 
-                _logger.LogDebug("Matched file: {FullName}", file.FullName);
+                _logger.LogMatched(item, file);
 
                 return Task.FromResult(new DynamicImageResponse
                 {
@@ -89,9 +88,7 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
             }
         }
 
-        _logger.LogInformation("Was not able to match: {Name} ({ProductionYear}), PremiereDate: {PremiereDate}", item.Name,
-            item.ProductionYear, item.PremiereDate);
-
+        _logger.LogMissing(item);
         return ValueCache.Empty.Value;
     }
 }
