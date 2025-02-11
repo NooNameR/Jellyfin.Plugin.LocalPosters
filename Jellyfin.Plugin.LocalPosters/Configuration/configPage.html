@@ -98,13 +98,8 @@
         }
 
         function save() {
-            debugger;
             ApiClient.updatePluginConfiguration(pluginId, config).then(function (res) {
-                console.log("Configuration saved successfully!");
-                alert("Configuration saved!");
             }).catch(function (err) {
-                console.error("Error saving configuration:", err);
-                alert("Failed to save configuration. Check console for details.");
             });
         }
     </script>
