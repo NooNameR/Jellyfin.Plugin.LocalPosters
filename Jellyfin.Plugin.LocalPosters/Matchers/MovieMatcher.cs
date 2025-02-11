@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using MediaBrowser.Controller.Entities.Movies;
-using MediaBrowser.Controller.Entities.TV;
 
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
@@ -39,11 +38,14 @@ public class MovieMatcher : RegexMatcher
             $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({productionYear}\)(\.[a-z]+)?$",
             RegexOptions.IgnoreCase);
 
-        yield return new Regex($@"^{sanitizedName} \({premiereYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
+        if (premiereYear.HasValue && premiereYear != productionYear)
+        {
+            yield return new Regex($@"^{sanitizedName} \({premiereYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
 
-        yield return new Regex(
-            $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({premiereYear}\)(\.[a-z]+)?$",
-            RegexOptions.IgnoreCase);
+            yield return new Regex(
+                $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({premiereYear}\)(\.[a-z]+)?$",
+                RegexOptions.IgnoreCase);
+        }
 
         var split = sanitizedName.Split(":");
         if (split.Length > 1)

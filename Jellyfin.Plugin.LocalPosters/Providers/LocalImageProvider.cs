@@ -89,8 +89,8 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
             }
         }
 
-        _logger.LogInformation("Was not able to match: {Name} ({ProductionYear})", item.Name,
-            item.ProductionYear);
+        _logger.LogInformation("Was not able to match: {Name} ({ProductionYear}), PremiereDate: {PremiereDate}", item.Name,
+            item.ProductionYear, item.PremiereDate);
 
         return ValueCache.Empty.Value;
     }

@@ -11,9 +11,8 @@ public class SeasonMatcherTests
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter";
-        const int SeasonNumber = 1;
-
-        var matcher = new SeasonMatcher(SeriesName, SeriesYear, SeasonNumber, SeasonYear);
+        const string SeasonName = "Season 1";
+        var matcher = new SeasonMatcher(SeriesName, SeriesYear, SeasonName, SeasonYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - Season 1.jpg"));
     }
@@ -23,10 +22,10 @@ public class SeasonMatcherTests
     {
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
+        const string SeasonName = "Season 1";
         string seriesName = $"Dexter ({SeriesYear})";
-        const int SeasonNumber = 1;
 
-        var matcher = new SeasonMatcher(seriesName, SeriesYear, SeasonNumber, SeasonYear);
+        var matcher = new SeasonMatcher(seriesName, SeriesYear, SeasonName, SeasonYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - Season 1.jpg"));
     }
@@ -37,9 +36,8 @@ public class SeasonMatcherTests
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
         string seriesName = $"Dexter ({SeasonYear})";
-        const int SeasonNumber = 1;
-
-        var matcher = new SeasonMatcher(seriesName, SeriesYear, SeasonNumber, SeasonYear);
+        const string SeasonName = "Season 1";
+        var matcher = new SeasonMatcher(seriesName, SeriesYear, SeasonName, SeasonYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - Season 1.jpg"));
     }
@@ -49,11 +47,10 @@ public class SeasonMatcherTests
     {
         const int SeasonYear = 2016;
         const int SeriesYear = 2017;
+        const string SeasonName = "Season 1";
         const string SeriesName = "Dexter";
-        const int SeasonNumber = 1;
 
-
-        var matcher = new SeasonMatcher(SeriesName, SeriesYear, SeasonNumber, SeasonYear);
+        var matcher = new SeasonMatcher(SeriesName, SeriesYear, SeasonName, SeasonYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - Season 1.jpg"));
     }
@@ -66,11 +63,10 @@ public class SeasonMatcherTests
     {
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
+        const string SeasonName = "Season 1";
         const string SeriesName = "Dexter: New Blood";
-        const int SeasonNumber = 1;
 
-
-        var matcher = new SeasonMatcher(SeriesName, SeriesYear, SeasonNumber, SeasonYear);
+        var matcher = new SeasonMatcher(SeriesName, SeriesYear, SeasonName, SeasonYear);
 
         Assert.True(matcher.IsMatch($"Dexter{symbol} new Blood (2016) - Season 1.jpg"));
     }

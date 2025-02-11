@@ -11,10 +11,11 @@ public class SeasonMatcher : RegexMatcher
     /// </summary>
     /// <param name="seriesName"></param>
     /// <param name="seriesProductionYear"></param>
-    /// <param name="seasonNumber"></param>
+    /// <param name="seasonName"></param>
     /// <param name="seasonProductionYear"></param>
-    public SeasonMatcher(string seriesName, int? seriesProductionYear, int? seasonNumber, int? seasonProductionYear) : base(
-        Regexes(seriesName, seriesProductionYear, seasonNumber, seasonProductionYear))
+    public SeasonMatcher(string seriesName, int? seriesProductionYear, string seasonName,
+        int? seasonProductionYear) : base(
+        Regexes(seriesName, seriesProductionYear, seasonName, seasonProductionYear))
     {
     }
 
@@ -22,17 +23,14 @@ public class SeasonMatcher : RegexMatcher
     ///
     /// </summary>
     /// <param name="season"></param>
-    public SeasonMatcher(Season season) : this(season.SeriesName, season.Series.ProductionYear, season.IndexNumber, season.ProductionYear)
+    public SeasonMatcher(Season season) : this(season.SeriesName, season.Series.ProductionYear, season.Name,
+        season.ProductionYear)
     {
     }
 
-    static IEnumerable<Regex> Regexes(string seriesName, int? seriesProductionYear, int? seasonNumber,
+    static IEnumerable<Regex> Regexes(string seriesName, int? seriesProductionYear, string seasonName,
         int? seasonProductionYear)
     {
-        // DO not support specials for now
-        if (seasonNumber < 1)
-            yield break;
-
         var sanitizedSeriesName =
             seriesName.Replace($" ({seriesProductionYear})", "", StringComparison.OrdinalIgnoreCase)
                 .Replace($" ({seasonProductionYear})", "", StringComparison.OrdinalIgnoreCase)
@@ -40,18 +38,18 @@ public class SeasonMatcher : RegexMatcher
                 .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
 
         yield return
-            new Regex($@"^{sanitizedSeriesName} \({seasonProductionYear}\)\s?[-\u2013]?\s?Season {seasonNumber}(\.[a-z]+)?$",
+            new Regex($@"^{sanitizedSeriesName} \({seasonProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
                 RegexOptions.IgnoreCase);
         yield return new Regex(
-            $@"^{sanitizedSeriesName} \({seriesProductionYear}\)\s?[-\u2013]?\s?Season {seasonNumber}(\.[a-z]+)?$",
+            $@"^{sanitizedSeriesName} \({seriesProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
             RegexOptions.IgnoreCase);
 
         yield return new Regex(
-            $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({seasonProductionYear}\)\s?[-\u2013]?\s?Season {seasonNumber}(\.[a-z]+)?$",
+            $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({seasonProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
             RegexOptions.IgnoreCase);
 
         yield return new Regex(
-            $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({seriesProductionYear}\)\s?[-\u2013]?\s?Season {seasonNumber}(\.[a-z]+)?$",
+            $@"^{sanitizedSeriesName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({seriesProductionYear}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
             RegexOptions.IgnoreCase);
     }
 }
