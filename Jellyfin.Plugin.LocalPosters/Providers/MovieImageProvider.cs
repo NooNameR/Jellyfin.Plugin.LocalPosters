@@ -64,7 +64,7 @@ public class MovieImageProvider : IDynamicImageProvider, IHasOrder
 
         foreach (var regex in Regexes())
         {
-            for (var i = _configuration.Folders.Count - 1; i >= 0; i--)
+            for (var i = _configuration.Folders.Length - 1; i >= 0; i--)
             {
                 foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
                 {

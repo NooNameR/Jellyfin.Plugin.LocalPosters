@@ -19,71 +19,92 @@
                     <br />
                 </div>
 
-                <!-- List Folders -->
-                <div>
-                    <h3 class="checkboxListLabel">Folders:</h3>
-                    <div id="divFolders" class="paperList checkboxList checkboxList-paperList">
+                <!-- Folder List -->
+                <div class="folders">
+                    <div style="display: flex; align-items: center;">
+                        <h1>Folders</h1>
+                        <button is="emby-button" type="button" class="fab btnAddFolder submit emby-button" title="Add" onclick="toggleFolderInput()">
+                            <span class="material-icons add" aria-hidden="true"></span>
+                        </button>
+                    </div>
+
+                    <div id="folderInputContainer" style="display: none; margin-top: 10px;">
+                        <input type="text" id="newFolder" class="emby-input" placeholder="Enter folder path">
+                        <button is="emby-button" type="button" class="raised button-submit emby-button" onclick="addFolder()">
+                            <span>Add</span>
+                        </button>
+                    </div>
+
+                    <div id="divFolders" class="paperList folderList">
                         <!-- Existing folders will be loaded here -->
                     </div>
                 </div>
 
-                <!-- Add Folder Button -->
-                <div>
-                    <input type="text" id="newFolder" placeholder="Enter folder path">
-                    <button is="emby-button" type="button" class="raised button-submit block emby-button" id="addFolderButton" onclick="addFolder()"><span>Add Folder</span></button>
-                </div>
-
-                <button is="emby-button" type="button" class="raised button-submit block emby-button" id="saveFoldersButton" onclick="save()"><span>Save</span></button>
-
+                <button is="emby-button" type="button" class="raised button-submit block emby-button" id="saveFoldersButton" onclick="save()">
+                    <span>Save</span>
+                </button>
             </form>
         </div>
     </div>
 
     <script type="text/javascript">
         var pluginId = "3938fe98-b7b2-4333-b678-c4c4e339d232";
-        var config = undefined;
+        var config = { Folders: [] };
 
         ApiClient.getPluginConfiguration(pluginId).then(function (savedConfig) {
-            config = savedConfig;
-
-            if (!config) {
-                config.Folders = [];
+            if (savedConfig) {
+                config = savedConfig;
             }
-
-            loadFolders(config.Folders);
+            loadFolders();
         });
 
-        function loadFolders(folders) {
+        function loadFolders() {
             var page = $.mobile.activePage;
             var html = '';
-            folders.forEach(function (folder, index) {
-                html += '<div class="folder-entry">' +
-                    '<span>' + folder + '</span>' +
-                    ' <button type="button" onclick="removeFolder(' + index + ')">Remove</button>' +
+
+            config.Folders.forEach(function (folder, index) {
+                html += '<div class="listItem lnkPath" data-index="' + index + '">' +
+                    '<div class="listItemBody">' +
+                    '<h3 class="listItemBodyText">' + folder + '</h3>' +
+                    '</div>' +
+                    '<button type="button" is="paper-icon-button-light" class="listItemButton btnRemovePath paper-icon-button-light" data-index="' + index + '" onclick="removeFolder(' + index + ')" title="Remove">' +
+                    '<span class="material-icons remove_circle" aria-hidden="true"></span>' +
+                    '</button>' +
                     '</div>';
             });
+
             $('#divFolders', page).html(html).trigger('create');
         }
 
+        function toggleFolderInput() {
+            var inputContainer = document.getElementById("folderInputContainer");
+            inputContainer.style.display = inputContainer.style.display === "none" ? "block" : "none";
+        }
+
         function addFolder() {
-            var folderInput = $('#newFolder').val();
-            if (folderInput && config) {
+            var folderInput = $('#newFolder').val().trim();
+            if (folderInput && !config.Folders.includes(folderInput)) {
                 config.Folders.push(folderInput);
-                save();
+                $('#newFolder').val('');
+                loadFolders(); // Update UI, but do not save yet
             }
         }
 
         function removeFolder(index) {
-            if (config && config.Folders && config.Folders[index]) {
+            if (config.Folders[index]) {
                 config.Folders.splice(index, 1);
-                save();
+                loadFolders(); // Update UI, but do not save yet
             }
         }
 
         function save() {
+            debugger;
             ApiClient.updatePluginConfiguration(pluginId, config).then(function (res) {
-                Dashboard.processPluginConfigurationUpdateResult(res);
-                loadFolders(config.Folders);  // Reload the folders after saving
+                console.log("Configuration saved successfully!");
+                alert("Configuration saved!");
+            }).catch(function (err) {
+                console.error("Error saving configuration:", err);
+                alert("Failed to save configuration. Check console for details.");
             });
         }
     </script>
