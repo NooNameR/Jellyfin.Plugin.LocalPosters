@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
@@ -13,6 +14,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
+        serviceCollection.AddSingleton<IMatcherFactory, MatcherFactory>();
         serviceCollection.AddSingleton<IBorderReplacer, SkiaSharpBorderReplacer>();
     }
 }

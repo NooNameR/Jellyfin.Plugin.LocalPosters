@@ -12,18 +12,16 @@ public interface IBorderReplacer
     ///
     /// </summary>
     /// <param name="source"></param>
-    /// <param name="destination"></param>
     /// <returns></returns>
-    Stream RemoveBorder(string source, string destination);
+    Stream RemoveBorder(string source);
 
     /// <summary>
     ///
     /// </summary>
-    /// <param name="destination"></param>
     /// <param name="color"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    Stream ReplaceBorder(string source, string destination, SKColor color);
+    Stream ReplaceBorder(string source, SKColor color);
 }
 
 /// <summary>
@@ -35,9 +33,8 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
     ///
     /// </summary>
     /// <param name="source"></param>
-    /// <param name="destination"></param>
     /// <returns></returns>
-    public Stream RemoveBorder(string source, string destination)
+    public Stream RemoveBorder(string source)
     {
         using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);
@@ -78,11 +75,10 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
     /// <summary>
     ///
     /// </summary>
-    /// <param name="destination"></param>
     /// <param name="color"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    public Stream ReplaceBorder(string source, string destination, SKColor color)
+    public Stream ReplaceBorder(string source, SKColor color)
     {
         using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);

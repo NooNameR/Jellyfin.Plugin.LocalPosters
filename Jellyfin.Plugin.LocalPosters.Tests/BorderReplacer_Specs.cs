@@ -19,7 +19,7 @@ public class SkiaSharpBorderReplacerTests
                                   _source.Extension);
         var borderReplacer = new SkiaSharpBorderReplacer();
 
-        using var image = borderReplacer.RemoveBorder(_source.FullName, target.FullName);
+        using var image = borderReplacer.RemoveBorder(_source.FullName);
         using var fileStream = new FileStream(target.FullName, FileMode.Create, FileAccess.Write);
         image.CopyTo(fileStream);
     }
@@ -31,7 +31,7 @@ public class SkiaSharpBorderReplacerTests
                                   _source.Extension);
         var borderReplacer = new SkiaSharpBorderReplacer();
 
-        using var image = borderReplacer.ReplaceBorder(_source.FullName, target.FullName, SKColors.SkyBlue);
+        using var image = borderReplacer.ReplaceBorder(_source.FullName, SKColors.SkyBlue);
         using var fileStream = new FileStream(target.FullName, FileMode.Create, FileAccess.Write);
         image.CopyTo(fileStream);
     }
