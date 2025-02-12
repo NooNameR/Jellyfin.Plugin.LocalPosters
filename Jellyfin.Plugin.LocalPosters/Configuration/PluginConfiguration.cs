@@ -1,4 +1,5 @@
 using MediaBrowser.Model.Plugins;
+using SkiaSharp;
 
 namespace Jellyfin.Plugin.LocalPosters.Configuration;
 
@@ -44,4 +45,14 @@ public class PluginConfiguration : BasePluginConfiguration
     ///
     /// </summary>
     public bool RemoveBorder { get; set; } = true;
+
+    /// <summary>
+    /// Hex color for border
+    /// </summary>
+    public string BorderColor { get; set; } = string.Empty;
+
+    /// <summary>
+    ///
+    /// </summary>
+    public SKColor? SkColor => !string.IsNullOrEmpty(BorderColor) && SKColor.TryParse(BorderColor, out var c) ? c : null;
 }

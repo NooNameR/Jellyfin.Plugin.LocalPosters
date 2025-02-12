@@ -19,27 +19,26 @@ namespace Jellyfin.Plugin.LocalPosters.Providers;
 /// </summary>
 public class LocalImageProvider : IDynamicImageProvider, IHasOrder
 {
-    private readonly PluginConfiguration _configuration;
     private readonly ILogger<LocalImageProvider> _logger;
     private readonly IFileSystem _fileSystem;
-    private readonly IBorderReplacer _borderReplacer;
     private readonly IMatcherFactory _matcherFactory;
+    private readonly Func<PluginConfiguration, IBorderReplacer> _borderReplacerFactory;
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="fileSystem"></param>
-    /// <param name="borderReplacer"></param>
     /// <param name="matcherFactory"></param>
+    /// <param name="borderReplacerFactory"></param>
     public LocalImageProvider(ILogger<LocalImageProvider> logger,
-        IFileSystem fileSystem, IBorderReplacer borderReplacer, IMatcherFactory matcherFactory)
+        IFileSystem fileSystem, IMatcherFactory matcherFactory,
+        Func<PluginConfiguration, IBorderReplacer> borderReplacerFactory)
     {
-        _configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         _logger = logger;
         _fileSystem = fileSystem;
-        _borderReplacer = borderReplacer;
         _matcherFactory = matcherFactory;
+        _borderReplacerFactory = borderReplacerFactory;
     }
 
     /// <inheritdoc />
@@ -63,11 +62,12 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     /// <inheritdoc />
     public Task<DynamicImageResponse> GetImage(BaseItem item, ImageType type, CancellationToken cancellationToken)
     {
+        var configuration = LocalPostersPlugin.Instance?.Configuration ?? new PluginConfiguration();
         var matcher = _matcherFactory.Create(item);
 
-        for (var i = _configuration.Folders.Length - 1; i >= 0; i--)
+        for (var i = configuration.Folders.Length - 1; i >= 0; i--)
         {
-            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
+            foreach (var file in _fileSystem.GetFiles(configuration.Folders[i]))
             {
                 var match = matcher.IsMatch(file.Name);
 
@@ -78,9 +78,10 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
 
                 _logger.LogMatched(item, file);
 
+                var borderReplacer = _borderReplacerFactory(configuration);
                 return Task.FromResult(new DynamicImageResponse
                 {
-                    Stream = _borderReplacer.RemoveBorder(file.FullName),
+                    Stream = borderReplacer.Replace(file.FullName),
                     HasImage = true,
                     Format = ImageFormat.Jpg,
                     Protocol = MediaProtocol.File

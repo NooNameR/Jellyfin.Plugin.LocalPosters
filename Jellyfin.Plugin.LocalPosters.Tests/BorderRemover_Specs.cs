@@ -3,21 +3,21 @@ using SkiaSharp;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
-public class SkiaSharpBorderReplacerTests
+public class BorderRemoverTests
 {
     private readonly FileInfo _source;
-    private readonly SkiaSharpBorderReplacer _borderReplacer;
+    private readonly SkiaSharpBorderRemover _borderReplacer;
 
-    public SkiaSharpBorderReplacerTests()
+    public BorderRemoverTests()
     {
         _source = new FileInfo("");
-        _borderReplacer = new SkiaSharpBorderReplacer(SKColors.SkyBlue);
+        _borderReplacer = new SkiaSharpBorderRemover();
     }
 
     // [Fact]
-    public void TestBorderReplacer()
+    public void TestBorderRemover()
     {
-        var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_replaced" +
+        var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_removed" +
                                   _source.Extension);
 
         using var image = _borderReplacer.Replace(_source.FullName);

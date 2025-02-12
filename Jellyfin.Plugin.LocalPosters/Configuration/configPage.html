@@ -19,6 +19,22 @@
                     <br/>
                 </div>
 
+                <!-- Remove Border Checkbox -->
+                <div class="checkboxContainer">
+                    <label>
+                        <input type="checkbox" id="removeBorderCheckbox" onchange="toggleBorderColor()"> Remove Border
+                    </label>
+                </div>
+                <br/>
+
+                <!-- Border Color Picker -->
+                <div class="colorPickerContainer">
+                    <label>
+                        Border Color: <input type="color" id="borderColorPicker">
+                    </label>
+                </div>
+                <br/>
+
                 <!-- Folder List -->
                 <div class="folders">
                     <div style="display: flex; align-items: center;">
@@ -37,9 +53,7 @@
                         </button>
                     </div>
 
-                    <div id="divFolders" class="paperList folderList" style="margin-bottom:2em">
-
-                    </div>
+                    <div id="divFolders" class="paperList folderList" style="margin-bottom:2em"></div>
                 </div>
 
                 <button is="emby-button" type="button" class="raised button-submit block emby-button"
@@ -52,12 +66,15 @@
 
     <script type="text/javascript">
         var pluginId = "3938fe98-b7b2-4333-b678-c4c4e339d232";
-        var config = {Folders: []};
+        var config = { Folders: [], RemoveBorder: true, BorderColor: "#000000" };
 
         ApiClient.getPluginConfiguration(pluginId).then(function (savedConfig) {
             if (savedConfig) {
                 config = savedConfig;
             }
+            document.getElementById("removeBorderCheckbox").checked = config.RemoveBorder || false;
+            document.getElementById("borderColorPicker").value = config.BorderColor || "#000000";
+            toggleBorderColor();
             loadFolders();
         });
 
@@ -79,20 +96,6 @@
             $('#divFolders', page).html(html).trigger('create');
         }
 
-        // Open the DirectoryBrowser component
-        function openDirectoryBrowser() {
-            // Assuming DirectoryBrowser is globally available after the import
-            var directoryBrowser = new DirectoryBrowser({
-                onFolderSelect: function(folderPath) {
-                    if (folderPath && !config.Folders.includes(folderPath)) {
-                        config.Folders.push(folderPath);
-                        loadFolders();
-                    }
-                }
-            });
-            directoryBrowser.open();
-        }
-
         function addFolder() {
             var folderInput = $('#newFolder').val().trim();
             if (folderInput && !config.Folders.includes(folderInput)) {
@@ -110,13 +113,19 @@
         }
 
         function save() {
-            ApiClient.updatePluginConfiguration(pluginId, config).then(function (res) {
+            config.RemoveBorder = document.getElementById("removeBorderCheckbox").checked;
+            config.BorderColor = document.getElementById("borderColorPicker").value;
+            ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
                 Dashboard.alert("Configuration Updated Successfully");
             }).catch(function (err) {
                 Dashboard.alert({
                     message: "Unexpected error occurred!"
                 });
             });
+        }
+
+        function toggleBorderColor() {
+            document.getElementById("borderColorPicker").disabled = document.getElementById("removeBorderCheckbox").checked;
         }
     </script>
 </div>

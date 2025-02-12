@@ -6,19 +6,8 @@ namespace Jellyfin.Plugin.LocalPosters.Utils;
 /// <summary>
 ///
 /// </summary>
-public class SkiaSharpBorderReplacer : IBorderReplacer
+public class SkiaSharpBorderRemover : IBorderReplacer
 {
-    private readonly SKColor _color;
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="color"></param>
-    public SkiaSharpBorderReplacer(SKColor color)
-    {
-        _color = color;
-    }
-
     /// <inheritdoc />
     public Stream Replace(string source)
     {
@@ -27,29 +16,26 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
         int width = bitmap.Width;
         int height = bitmap.Height;
 
-        // Crop 25px from all sides
-        using SKBitmap cropped = new SKBitmap(width - 50, height - 50);
+        using var cropped = new SKBitmap(width - 50, height - 25);
         using (var canvas = new SKCanvas(cropped))
         {
+            // Copy cropped region
             canvas.DrawBitmap(bitmap,
-                new SKRect(25, 25, width - 25, height - 25), // Source (crop area)
-                new SKRect(0, 0, width - 50, height - 50) // Destination
+                new SKRect(25, 25, width - 25, height), // Source (crop area)
+                new SKRect(0, 0, width - 50, height - 25) // Destination
             );
-        }
 
-        // Create new image with custom color background
-        using SKBitmap newImage = new SKBitmap(width, height);
-        using (var canvas = new SKCanvas(newImage))
-        {
-            canvas.Clear(_color); // Fill background with custom color
-            canvas.DrawBitmap(cropped, new SKPoint(25, 25)); // Paste cropped image
+            // Draw black bottom border
+            using var paint = new SKPaint();
+            paint.Color = SKColors.Black;
+            canvas.DrawRect(0, cropped.Height - 25, width - 50, 25, paint);
         }
 
         // Resize to 1000x1500
         using var resizedImage = new SKBitmap(1000, 1500);
         using (var canvas = new SKCanvas(resizedImage))
         {
-            canvas.DrawBitmap(newImage, new SKRect(0, 0, 1000, 1500));
+            canvas.DrawBitmap(cropped, new SKRect(0, 0, 1000, 1500));
 
             // Use MemoryStream to store the result
             var memoryStream = new MemoryStream();
