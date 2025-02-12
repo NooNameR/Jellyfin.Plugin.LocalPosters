@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Jellyfin.Plugin.LocalPosters.Configuration;
+using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.Logging;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;
@@ -23,6 +24,7 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     private readonly IFileSystem _fileSystem;
     private readonly IMatcherFactory _matcherFactory;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly TimeProvider _timeProvider;
 
     /// <summary>
     ///
@@ -31,14 +33,16 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     /// <param name="fileSystem"></param>
     /// <param name="matcherFactory"></param>
     /// <param name="serviceScopeFactory"></param>
+    /// <param name="timeProvider"></param>
     public LocalImageProvider(ILogger<LocalImageProvider> logger,
         IFileSystem fileSystem, IMatcherFactory matcherFactory,
-        IServiceScopeFactory serviceScopeFactory)
+        IServiceScopeFactory serviceScopeFactory, TimeProvider timeProvider)
     {
         _logger = logger;
         _fileSystem = fileSystem;
         _matcherFactory = matcherFactory;
         _serviceScopeFactory = serviceScopeFactory;
+        _timeProvider = timeProvider;
     }
 
     /// <inheritdoc />
@@ -67,6 +71,10 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
 
         await using var serviceScope = _serviceScopeFactory.CreateAsyncScope();
 
+        var context = serviceScope.ServiceProvider.GetRequiredService<Context>();
+        var record = await context.Set<PosterRecord>().FindAsync([item.Id], cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
         var configuration = serviceScope.ServiceProvider.GetRequiredService<PluginConfiguration>();
         var matcher = _matcherFactory.Create(item);
 
@@ -84,6 +92,21 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
                 _logger.LogMatched(item, file);
 
                 var borderReplacer = serviceScope.ServiceProvider.GetRequiredService<IBorderReplacer>();
+
+                if (record == null)
+                {
+                    record = new PosterRecord(item.Id, _timeProvider.GetUtcNow());
+                    record.SetPosterFile(file);
+                    await context.Set<PosterRecord>().AddAsync(record, cancellationToken);
+                }
+                else
+                {
+                    record.SetPosterFile(file);
+                    context.Set<PosterRecord>().Update(record);
+                }
+
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
                 return new DynamicImageResponse
                 {
                     Stream = borderReplacer.Replace(file.FullName),

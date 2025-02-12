@@ -3,6 +3,7 @@ using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.LocalPosters;
@@ -15,6 +16,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
+        serviceCollection.AddDbContext<Context>(builder => builder.UseSqlite(Context.ConnectionString));
         serviceCollection.AddSingleton<IMatcherFactory, MatcherFactory>();
         serviceCollection.AddScoped<PluginConfiguration>(_ =>
         {
@@ -22,6 +24,8 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
             return LocalPostersPlugin.Instance.Configuration;
         });
         serviceCollection.AddScoped(CreateBorderReplacer);
+
+        serviceCollection.AddHostedService<ContextMigrationHostedService>();
     }
 
     static IBorderReplacer CreateBorderReplacer(IServiceProvider provider)
