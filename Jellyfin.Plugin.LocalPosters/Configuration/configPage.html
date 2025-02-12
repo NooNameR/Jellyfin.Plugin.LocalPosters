@@ -19,26 +19,35 @@
                     <br/>
                 </div>
 
-                <!-- Remove Border Checkbox -->
-                <div class="checkboxContainer">
-                    <label>
-                        <input type="checkbox" id="enableBorderReplacerCheckbox" onchange="toggleBorderReplacer()"> Enable Border Replacer
-                    </label>
+                <div class="checkboxContainer checkboxContainer-withDescription advanced"><label class="emby-checkbox-label"> <input
+                    type="checkbox" is="emby-checkbox" class="chkEnableRealtimeMonitor emby-checkbox" checked="checked"
+                    data-embycheckbox="true" id="enableBorderReplacerCheckbox" onchange="toggleBorderReplacer()"> <span
+                    class="checkboxLabel">Enable border replacing</span>
+                    <span
+                        class="checkboxOutline"><span class="material-icons checkboxIcon checkboxIcon-checked check"
+                                                      aria-hidden="true"></span><span
+                        class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span></span></label>
+                    <div class="fieldDescription checkboxFieldDescription">Change a border based on the settings bellow.
+                    </div>
                 </div>
-                <br/>
 
                 <!-- Remove Border Checkbox -->
-                <div class="checkboxContainer">
-                    <label>
-                        <input type="checkbox" id="removeBorderCheckbox" onchange="toggleBorderColor()"> Remove Border
-                    </label>
+                <div class="checkboxContainer checkboxContainer-withDescription advanced"><label class="emby-checkbox-label"> <input
+                    type="checkbox" is="emby-checkbox" class="chkEnableRealtimeMonitor emby-checkbox" checked="checked"
+                    data-embycheckbox="true" id="removeBorderCheckbox" onchange="toggleBorderColor()"> <span class="checkboxLabel">Enable border removing</span>
+                    <span
+                        class="checkboxOutline"><span class="material-icons checkboxIcon checkboxIcon-checked check"
+                                                      aria-hidden="true"></span><span
+                        class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span></span></label>
+                    <div class="fieldDescription checkboxFieldDescription">Remove border from the poster image.
+                        systems.
+                    </div>
                 </div>
-                <br/>
 
                 <!-- Border Color Picker -->
-                <div class="colorPickerContainer">
+                <div class="selectContainer">
                     <label>
-                        Border Color: <input type="color" id="borderColorPicker">
+                        Border Color: <input is="emby-input" type="color" id="borderColorPicker">
                     </label>
                 </div>
                 <br/>
