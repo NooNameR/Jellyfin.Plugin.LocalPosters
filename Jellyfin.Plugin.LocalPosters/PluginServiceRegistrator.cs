@@ -16,11 +16,17 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
         serviceCollection.AddSingleton<IMatcherFactory, MatcherFactory>();
-        serviceCollection.AddSingleton<Func<PluginConfiguration, IBorderReplacer>>(CreateBorderReplacer);
+        serviceCollection.AddScoped<PluginConfiguration>(_ =>
+        {
+            ArgumentNullException.ThrowIfNull(LocalPostersPlugin.Instance);
+            return LocalPostersPlugin.Instance.Configuration;
+        });
+        serviceCollection.AddScoped(CreateBorderReplacer);
     }
 
-    static IBorderReplacer CreateBorderReplacer(PluginConfiguration pluginConfiguration)
+    static IBorderReplacer CreateBorderReplacer(IServiceProvider provider)
     {
+        var pluginConfiguration = provider.GetRequiredService<PluginConfiguration>();
         if (!pluginConfiguration.EnableBorderReplacer)
             return new SkiaDefaultBorderReplacer();
 

@@ -10,5 +10,5 @@ public static class ValueCache
     /// <summary>
     ///
     /// </summary>
-    public static readonly Lazy<Task<DynamicImageResponse>> Empty = new(() => Task.FromResult(new DynamicImageResponse { HasImage = false }));
+    public static readonly Lazy<DynamicImageResponse> Empty = new(() => new DynamicImageResponse { HasImage = false });
 }
