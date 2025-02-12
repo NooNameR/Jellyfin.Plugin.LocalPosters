@@ -84,7 +84,6 @@
             document.getElementById("removeBorderCheckbox").checked = config.RemoveBorder || false;
             document.getElementById("borderColorPicker").value = config.BorderColor || "#000000";
             toggleBorderReplacer();
-            toggleBorderColor();
             loadFolders();
         });
 
@@ -136,12 +135,13 @@
         }
 
         function toggleBorderReplacer() {
-            document.getElementById("removeBorderCheckbox").disabled = document.getElementById("enableBorderReplacerCheckbox").checked;
-            document.getElementById("borderColorPicker").disabled = document.getElementById("enableBorderReplacerCheckbox").checked;
+            document.getElementById("removeBorderCheckbox").disabled = !document.getElementById("enableBorderReplacerCheckbox").checked;
+
+            toggleBorderColor()
         }
 
         function toggleBorderColor() {
-            document.getElementById("borderColorPicker").disabled = document.getElementById("removeBorderCheckbox").checked;
+            document.getElementById("borderColorPicker").disabled = !document.getElementById("enableBorderReplacerCheckbox").checked || document.getElementById("removeBorderCheckbox").checked;
         }
     </script>
 </div>
