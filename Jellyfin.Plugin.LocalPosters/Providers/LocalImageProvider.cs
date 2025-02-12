@@ -82,37 +82,35 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
         {
             foreach (var file in _fileSystem.GetFiles(configuration.Folders[i]))
             {
-                var match = matcher.IsMatch(file.Name);
-
                 _logger.LogMatching(file, item);
+
+                var match = matcher.IsMatch(file.Name);
 
                 if (!match)
                     continue;
 
-                _logger.LogMatched(item, file);
-
-                var borderReplacer = serviceScope.ServiceProvider.GetRequiredService<IBorderReplacer>();
-
+                var now = _timeProvider.GetLocalNow();
                 if (record == null)
                 {
-                    record = new PosterRecord(item.Id, _timeProvider.GetUtcNow());
-                    record.SetPosterFile(file);
+                    record = new PosterRecord(item.Id, now, file);
+                    record.SetPosterFile(file, now);
                     await context.Set<PosterRecord>().AddAsync(record, cancellationToken);
                 }
                 else
                 {
-                    record.SetPosterFile(file);
+                    record.SetPosterFile(file, now);
                     context.Set<PosterRecord>().Update(record);
                 }
 
                 await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+                _logger.LogMatched(item, file);
+
+                var borderReplacer = serviceScope.ServiceProvider.GetRequiredService<IBorderReplacer>();
+
                 return new DynamicImageResponse
                 {
-                    Stream = borderReplacer.Replace(file.FullName),
-                    HasImage = true,
-                    Format = ImageFormat.Jpg,
-                    Protocol = MediaProtocol.File
+                    Stream = borderReplacer.Replace(file.FullName), HasImage = true, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
                 };
             }
         }
