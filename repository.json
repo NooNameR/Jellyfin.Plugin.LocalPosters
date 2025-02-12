@@ -9,8 +9,8 @@
     "versions": [
       {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.5.0...0.0.5.2",
-        "checksum": "",
-        "sourceUrl": "",
+        "checksum": "5fd25334435d285980c0d8c104356073",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.5.2/local-posters_0.0.5.2.zip",
         "targetAbi": "10.10.0.0",
         "timestamp": "2025-02-12T15:46:12Z",
         "version": "0.0.5.2"
