@@ -9,12 +9,16 @@ namespace Jellyfin.Plugin.LocalPosters;
 /// </summary>
 public class Context : DbContext
 {
+    private readonly TimeProvider _timeProvider;
+
     /// <summary>
     ///
     /// </summary>
     /// <param name="options"></param>
-    public Context(DbContextOptions<Context> options) : base(options)
+    /// <param name="timeProvider"></param>
+    public Context(DbContextOptions<Context> options, TimeProvider timeProvider) : base(options)
     {
+        _timeProvider = timeProvider;
     }
 
     /// <summary>
@@ -58,6 +62,6 @@ public class ContextFactory : IDesignTimeDbContextFactory<Context>
         optionsBuilder.UseSqlite($"Data Source={Context.DbName}")
             .EnableSensitiveDataLogging(false);
 
-        return new Context(optionsBuilder.Options);
+        return new Context(optionsBuilder.Options, TimeProvider.System);
     }
 }

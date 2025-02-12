@@ -3,6 +3,7 @@ using System;
 using Jellyfin.Plugin.LocalPosters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Jellyfin.Plugin.LocalPosters.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20250212152920_MatchedAt")]
+    partial class MatchedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
@@ -30,7 +33,6 @@ namespace Jellyfin.Plugin.LocalPosters.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("_posterPath")
-                        .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("PosterPath");
 
