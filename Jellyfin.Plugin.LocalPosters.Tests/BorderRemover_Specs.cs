@@ -4,14 +4,14 @@ using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
-public class BorderRemoverTests
+public class SkiaSharpBorderRemoverTests
 {
     private readonly FileInfo _source;
     private readonly SkiaSharpBorderRemover _borderReplacer;
 
-    public BorderRemoverTests()
+    public SkiaSharpBorderRemoverTests()
     {
-        _source = new FileInfo("");
+        _source = new FileInfo("abc.jpg");
         _borderReplacer = new SkiaSharpBorderRemover();
     }
 

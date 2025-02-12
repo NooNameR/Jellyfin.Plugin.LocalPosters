@@ -11,7 +11,7 @@ public class SkiaSharpBorderReplacerTests
 
     public SkiaSharpBorderReplacerTests()
     {
-        _source = new FileInfo("");
+        _source = new FileInfo("abc.jpg");
         _borderReplacer = new SkiaSharpBorderReplacer(SKColors.SkyBlue);
     }
 

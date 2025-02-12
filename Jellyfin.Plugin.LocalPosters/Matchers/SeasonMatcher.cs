@@ -5,8 +5,13 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
 /// <inheritdoc />
-public class SeasonMatcher : RegexMatcher
+public partial class SeasonMatcher : IMatcher
 {
+    private readonly string _seriesName;
+    private readonly int? _seriesProductionYear;
+    private readonly string _seasonName;
+    private readonly int? _seasonProductionYear;
+
     /// <summary>
     ///
     /// </summary>
@@ -15,9 +20,12 @@ public class SeasonMatcher : RegexMatcher
     /// <param name="seasonName"></param>
     /// <param name="seasonProductionYear"></param>
     public SeasonMatcher(string seriesName, int? seriesProductionYear, string seasonName,
-        int? seasonProductionYear) : base(
-        Regexes(seriesName, seriesProductionYear, seasonName, seasonProductionYear))
+        int? seasonProductionYear)
     {
+        _seriesName = seriesName;
+        _seriesProductionYear = seriesProductionYear;
+        _seasonName = seasonName;
+        _seasonProductionYear = seasonProductionYear;
     }
 
     /// <summary>
@@ -29,28 +37,18 @@ public class SeasonMatcher : RegexMatcher
     {
     }
 
-    static IEnumerable<Regex> Regexes(string seriesName, int? seriesProductionYear, string seasonName,
-        int? seasonProductionYear)
+    /// <inheritdoc />
+    public bool IsMatch(string fileName)
     {
-        var name = SanitizedName(seriesName, seriesProductionYear, seasonProductionYear);
+        var match = SeasonRegex().Match(fileName);
+        if (!match.Success) return false;
 
-        foreach (var year in new HashSet<int?> { seasonProductionYear, seriesProductionYear }.OfType<int?>())
-        {
-            yield return
-                new Regex($@"^{name} \({year}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
-                    RegexOptions.IgnoreCase);
-            yield return new Regex(
-                $@"^{name.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({year}\)\s?[-\u2013]?\s?{seasonName}(\.[a-z]+)?$",
-                RegexOptions.IgnoreCase);
-        }
+        if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
+        return (year == _seasonProductionYear || year == _seriesProductionYear) &&
+               _seriesName.EqualsSanitizing(match.Groups[1].Value) &&
+               string.Equals(match.Groups[3].Value, _seasonName, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string SanitizedName(string seriesName, int? seriesProductionYear, int? seasonProductionYear)
-    {
-        return
-            seriesName.Replace($" ({seriesProductionYear})", "", StringComparison.OrdinalIgnoreCase)
-                .Replace($" ({seasonProductionYear})", "", StringComparison.OrdinalIgnoreCase)
-                .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
-                .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
-    }
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*-\s*(Season \d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex SeasonRegex();
 }

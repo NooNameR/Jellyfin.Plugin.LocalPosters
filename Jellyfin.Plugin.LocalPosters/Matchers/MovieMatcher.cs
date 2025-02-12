@@ -4,17 +4,23 @@ using MediaBrowser.Controller.Entities.Movies;
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
 /// <inheritdoc />
-public class MovieMatcher : RegexMatcher
+public partial class MovieMatcher : IMatcher
 {
+    private readonly string _name;
+    private readonly int? _productionYear;
+    private readonly int? _premiereYear;
+
     /// <summary>
     ///
     /// </summary>
     /// <param name="name"></param>
     /// <param name="productionYear"></param>
     /// <param name="premiereYear"></param>
-    public MovieMatcher(string name, int? productionYear, int? premiereYear) : base(
-        Regexes(name, productionYear, premiereYear))
+    public MovieMatcher(string name, int? productionYear, int? premiereYear)
     {
+        _name = name;
+        _productionYear = productionYear;
+        _premiereYear = premiereYear;
     }
 
     /// <summary>
@@ -25,30 +31,23 @@ public class MovieMatcher : RegexMatcher
     {
     }
 
-    static IEnumerable<Regex> Regexes(string name, int? productionYear, int? premiereYear)
+    /// <inheritdoc />
+    public bool IsMatch(string fileName)
     {
-        var sanitizedName = SanitizeName(name, productionYear, premiereYear);
+        var match = MovieRegex().Match(fileName);
+        if (!match.Success) return false;
 
-        foreach (var year in new HashSet<int?> { productionYear, premiereYear }.OfType<int?>())
-        {
-            yield return new Regex($@"^{sanitizedName} \({year}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
-
-            yield return new Regex(
-                $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({year}\)(\.[a-z]+)?$",
-                RegexOptions.IgnoreCase);
-        }
-
-        var split = sanitizedName.Split(":");
-        if (split.Length > 1)
-            yield return
-                new Regex($@"^{split[0]} \({productionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
+        if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
+        return (year == _productionYear || year == _premiereYear) &&
+               _name.EqualsSanitizing(match.Groups[1].Value) || IsPartialMatch(_name, match.Groups[1].Value);
     }
 
-    static string SanitizeName(string name, int? productionYear, int? premiereYear)
+    private static bool IsPartialMatch(string name, string fileName)
     {
-        return name.Replace($" ({productionYear})", "", StringComparison.OrdinalIgnoreCase)
-            .Replace($" ({premiereYear})", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
-            .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
+        var split = name.Split(":", StringSplitOptions.RemoveEmptyEntries);
+        return split.Length > 1 && split[0].EqualsSanitizing(fileName);
     }
+
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)", RegexOptions.IgnoreCase)]
+    private static partial Regex MovieRegex();
 }

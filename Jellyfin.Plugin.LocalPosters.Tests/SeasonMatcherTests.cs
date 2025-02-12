@@ -1,5 +1,4 @@
 using Jellyfin.Plugin.LocalPosters.Matchers;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;

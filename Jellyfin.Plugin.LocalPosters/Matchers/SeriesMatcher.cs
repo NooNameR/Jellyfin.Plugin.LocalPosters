@@ -5,16 +5,20 @@ using MediaBrowser.Controller.Entities.TV;
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
 /// <inheritdoc />
-public class SeriesMatcher : RegexMatcher
+public partial class SeriesMatcher : IMatcher
 {
+    private readonly string _name;
+    private readonly int? _productionYear;
+
     /// <summary>
     ///
     /// </summary>
     /// <param name="name"></param>
     /// <param name="productionYear"></param>
-    public SeriesMatcher(string name, int? productionYear) : base(
-        Regexes(name, productionYear))
+    public SeriesMatcher(string name, int? productionYear)
     {
+        _name = name;
+        _productionYear = productionYear;
     }
 
     /// <summary>
@@ -25,22 +29,17 @@ public class SeriesMatcher : RegexMatcher
     {
     }
 
-    static IEnumerable<Regex> Regexes(string name, int? productionYear)
+    /// <inheritdoc />
+    public bool IsMatch(string fileName)
     {
-        var sanitizedName = SanitizedName(name, productionYear);
+        var match = SeasonRegex().Match(fileName);
+        if (!match.Success) return false;
 
-        yield return
-            new Regex($@"^{sanitizedName} \({productionYear}\)(\.[a-z]+)?$", RegexOptions.IgnoreCase);
-
-        yield return new Regex(
-            $@"^{sanitizedName.Replace(":", @"([:_\-\u2013])?", StringComparison.OrdinalIgnoreCase)} \({productionYear}\)(\.[a-z]+)?$",
-            RegexOptions.IgnoreCase);
+        if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
+        return (year == _productionYear) &&
+               _name.EqualsSanitizing(match.Groups[1].Value);
     }
 
-    private static string SanitizedName(string name, int? productionYear)
-    {
-        return name.Replace($" ({productionYear})", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("–", "-", StringComparison.OrdinalIgnoreCase)
-            .Replace("–", @"[-\u2013]", StringComparison.OrdinalIgnoreCase);
-    }
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)", RegexOptions.IgnoreCase)]
+    private static partial Regex SeasonRegex();
 }
