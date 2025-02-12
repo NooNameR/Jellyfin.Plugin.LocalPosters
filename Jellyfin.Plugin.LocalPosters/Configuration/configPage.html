@@ -22,6 +22,14 @@
                 <!-- Remove Border Checkbox -->
                 <div class="checkboxContainer">
                     <label>
+                        <input type="checkbox" id="enableBorderReplacerCheckbox" onchange="toggleBorderReplacer()"> Enable Border Replacer
+                    </label>
+                </div>
+                <br/>
+
+                <!-- Remove Border Checkbox -->
+                <div class="checkboxContainer">
+                    <label>
                         <input type="checkbox" id="removeBorderCheckbox" onchange="toggleBorderColor()"> Remove Border
                     </label>
                 </div>
@@ -66,14 +74,16 @@
 
     <script type="text/javascript">
         var pluginId = "3938fe98-b7b2-4333-b678-c4c4e339d232";
-        var config = { Folders: [], RemoveBorder: true, BorderColor: "#000000" };
+        var config = {Folders: [], EnableBorderReplacer: true, RemoveBorder: true, BorderColor: "#000000"};
 
         ApiClient.getPluginConfiguration(pluginId).then(function (savedConfig) {
             if (savedConfig) {
                 config = savedConfig;
             }
+            document.getElementById("enableBorderReplacerCheckbox").checked = config.EnableBorderReplacer || false;
             document.getElementById("removeBorderCheckbox").checked = config.RemoveBorder || false;
             document.getElementById("borderColorPicker").value = config.BorderColor || "#000000";
+            toggleBorderReplacer();
             toggleBorderColor();
             loadFolders();
         });
@@ -113,6 +123,7 @@
         }
 
         function save() {
+            config.EnableBorderReplacer = document.getElementById("enableBorderReplacerCheckbox").checked;
             config.RemoveBorder = document.getElementById("removeBorderCheckbox").checked;
             config.BorderColor = document.getElementById("borderColorPicker").value;
             ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
@@ -122,6 +133,11 @@
                     message: "Unexpected error occurred!"
                 });
             });
+        }
+
+        function toggleBorderReplacer() {
+            document.getElementById("removeBorderCheckbox").disabled = document.getElementById("enableBorderReplacerCheckbox").checked;
+            document.getElementById("borderColorPicker").disabled = document.getElementById("enableBorderReplacerCheckbox").checked;
         }
 
         function toggleBorderColor() {

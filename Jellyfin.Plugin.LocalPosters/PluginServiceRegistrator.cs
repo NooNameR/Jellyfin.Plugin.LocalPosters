@@ -21,9 +21,12 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
 
     static IBorderReplacer CreateBorderReplacer(PluginConfiguration pluginConfiguration)
     {
-        if (pluginConfiguration.RemoveBorder || pluginConfiguration.SkColor == null)
+        if (pluginConfiguration.RemoveBorder)
             return new SkiaSharpBorderRemover();
 
-        return new SkiaSharpBorderReplacer(pluginConfiguration.SkColor.Value);
+        if (pluginConfiguration.SkColor.HasValue)
+            return new SkiaSharpBorderReplacer(pluginConfiguration.SkColor.Value);
+
+        return new SkiaDefaultBorderReplacer();
     }
 }
