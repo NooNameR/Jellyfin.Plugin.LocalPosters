@@ -17,7 +17,7 @@ namespace Jellyfin.Plugin.LocalPosters.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    _posterPath = table.Column<string>(type: "TEXT", nullable: true)
+                    PosterPath = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

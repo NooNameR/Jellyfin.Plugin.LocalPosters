@@ -20,13 +20,29 @@ public class Context : DbContext
     /// <summary>
     ///
     /// </summary>
-    public static readonly string ConnectionString = "Data Source=local-posters.db";
+    public static readonly string DbName = "local-posters.db";
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         new PosterRecordConfiguration().Configure(modelBuilder.Entity<PosterRecord>());
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public void ApplyMigration()
+    {
+        // If database doesn't exist or can't connect, create it with migrations
+        if (!Database.CanConnect())
+        {
+            Database.Migrate();
+            return;
+        }
+
+        // If migrations table exists, apply pending migrations normally
+        if (Database.GetAppliedMigrations().Any()) Database.Migrate();
     }
 }
 
@@ -39,7 +55,7 @@ public class ContextFactory : IDesignTimeDbContextFactory<Context>
     public Context CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<Context>();
-        optionsBuilder.UseSqlite(Context.ConnectionString)
+        optionsBuilder.UseSqlite($"Data Source={Context.DbName}")
             .EnableSensitiveDataLogging(false);
 
         return new Context(optionsBuilder.Options);

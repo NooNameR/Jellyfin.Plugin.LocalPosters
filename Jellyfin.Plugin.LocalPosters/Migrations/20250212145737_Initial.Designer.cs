@@ -11,14 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Jellyfin.Plugin.LocalPosters.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20250212140234_Initial")]
+    [Migration("20250212145737_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
 
             modelBuilder.Entity("Jellyfin.Plugin.LocalPosters.Entities.PosterRecord", b =>
                 {
@@ -30,7 +30,8 @@ namespace Jellyfin.Plugin.LocalPosters.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("_posterPath")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("PosterPath");
 
                     b.HasKey("Id");
 

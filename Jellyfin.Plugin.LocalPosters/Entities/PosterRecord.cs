@@ -70,6 +70,6 @@ public class PosterRecordConfiguration : IEntityTypeConfiguration<PosterRecord>
     public void Configure(EntityTypeBuilder<PosterRecord> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property<string?>("_posterPath").IsRequired(false);
+        builder.Property<string?>("_posterPath").HasColumnName("PosterPath").IsRequired(false);
     }
 }

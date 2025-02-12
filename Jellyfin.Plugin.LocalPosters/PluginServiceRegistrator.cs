@@ -16,16 +16,19 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
-        serviceCollection.AddDbContext<Context>(builder => builder.UseSqlite(Context.ConnectionString));
+        serviceCollection.AddDbContext<Context>((p, builder) =>
+        {
+            var plugin = p.GetRequiredService<LocalPostersPlugin>();
+            builder.UseSqlite($"Data Source={plugin.DbPath}");
+        });
         serviceCollection.AddSingleton<IMatcherFactory, MatcherFactory>();
-        serviceCollection.AddScoped<PluginConfiguration>(_ =>
+        serviceCollection.AddScoped<LocalPostersPlugin>(_ =>
         {
             ArgumentNullException.ThrowIfNull(LocalPostersPlugin.Instance);
-            return LocalPostersPlugin.Instance.Configuration;
+            return LocalPostersPlugin.Instance;
         });
+        serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
         serviceCollection.AddScoped(CreateBorderReplacer);
-
-        serviceCollection.AddHostedService<ContextMigrationHostedService>();
     }
 
     static IBorderReplacer CreateBorderReplacer(IServiceProvider provider)
