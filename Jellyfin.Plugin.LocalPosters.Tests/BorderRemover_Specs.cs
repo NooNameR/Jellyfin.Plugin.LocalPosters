@@ -1,5 +1,6 @@
 ﻿using Jellyfin.Plugin.LocalPosters.Utils;
 using SkiaSharp;
+using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
@@ -14,8 +15,13 @@ public class BorderRemoverTests
         _borderReplacer = new SkiaSharpBorderRemover();
     }
 
+    [Fact]
+    public void Test()
+    {
+    }
+
     // [Fact]
-    public void TestBorderRemover()
+    private void TestBorderRemover()
     {
         var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_removed" +
                                   _source.Extension);

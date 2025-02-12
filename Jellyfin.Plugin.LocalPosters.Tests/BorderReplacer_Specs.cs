@@ -1,5 +1,6 @@
 ﻿using Jellyfin.Plugin.LocalPosters.Utils;
 using SkiaSharp;
+using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
@@ -14,8 +15,13 @@ public class SkiaSharpBorderReplacerTests
         _borderReplacer = new SkiaSharpBorderReplacer(SKColors.SkyBlue);
     }
 
+    [Fact]
+    public void Test()
+    {
+    }
+
     // [Fact]
-    public void TestBorderReplacer()
+    private void TestBorderReplacer()
     {
         var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_replaced" +
                                   _source.Extension);
