@@ -27,6 +27,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
             ArgumentNullException.ThrowIfNull(LocalPostersPlugin.Instance);
             return LocalPostersPlugin.Instance;
         });
+        serviceCollection.AddScoped<IImageSearcher, ImageSearcher>();
         serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
         serviceCollection.AddScoped(CreateBorderReplacer);
     }

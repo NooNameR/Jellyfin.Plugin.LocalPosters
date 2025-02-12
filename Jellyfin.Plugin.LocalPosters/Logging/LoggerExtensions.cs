@@ -29,7 +29,7 @@ public static class LoggerExtensions
         LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for series: {Name} ({Year})...");
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchingMovieMessage =
-        LoggerMessage.Define<string, string, int?>(LogLevel.Information, 2, "Matching file {FilePath} for movie: {Name} ({Year})...");
+        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for movie: {Name} ({Year})...");
 
     private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchedSeasonMessage =
         LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 3,
@@ -39,7 +39,7 @@ public static class LoggerExtensions
         LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match series: {Name} ({Year})");
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchedMovieMessage =
-        LoggerMessage.Define<string, string, int?>(LogLevel.Information, 3, "File {FilePath} match movie: {Name} ({Year})");
+        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match movie: {Name} ({Year})");
 
 
     /// <summary>

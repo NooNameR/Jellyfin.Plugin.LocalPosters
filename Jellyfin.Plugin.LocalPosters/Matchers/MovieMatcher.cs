@@ -39,7 +39,7 @@ public partial class MovieMatcher : IMatcher
 
         if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
         return (year == _productionYear || year == _premiereYear) &&
-               _name.EqualsSanitizing(match.Groups[1].Value) || IsPartialMatch(_name, match.Groups[1].Value);
+               (_name.EqualsSanitizing(match.Groups[1].Value) || IsPartialMatch(_name, match.Groups[1].Value));
     }
 
     private static bool IsPartialMatch(string name, string fileName)
@@ -48,6 +48,6 @@ public partial class MovieMatcher : IMatcher
         return split.Length > 1 && split[0].EqualsSanitizing(fileName);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]
     private static partial Regex MovieRegex();
 }

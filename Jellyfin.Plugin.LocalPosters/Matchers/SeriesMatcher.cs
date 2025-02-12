@@ -40,6 +40,6 @@ public partial class SeriesMatcher : IMatcher
                _name.EqualsSanitizing(match.Groups[1].Value);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]
     private static partial Regex SeasonRegex();
 }

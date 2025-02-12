@@ -1,6 +1,14 @@
+using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.LocalPosters.Entities;
+using Jellyfin.Plugin.LocalPosters.Logging;
+using Jellyfin.Plugin.LocalPosters.Matchers;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
@@ -13,6 +21,8 @@ public class UpdateTask : IScheduledTask
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<UpdateTask> _logger;
     private readonly IProviderManager _providerManager;
+    private readonly IDirectoryService _directoryService;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     /// <summary>
     ///
@@ -20,17 +30,91 @@ public class UpdateTask : IScheduledTask
     /// <param name="libraryManager"></param>
     /// <param name="logger"></param>
     /// <param name="providerManager"></param>
-    public UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager)
+    /// <param name="directoryService"></param>
+    /// <param name="serviceScopeFactory"></param>
+    public UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager,
+        IDirectoryService directoryService, IServiceScopeFactory serviceScopeFactory)
     {
         _libraryManager = libraryManager;
         _logger = logger;
         _providerManager = providerManager;
+        _directoryService = directoryService;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     /// <inheritdoc />
-    public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
+        progress.Report(0);
+
+#pragma warning disable CA2007
+        await using var scope = _serviceScopeFactory.CreateAsyncScope();
+        await using var context = scope.ServiceProvider.GetRequiredService<Context>();
+#pragma warning restore CA2007
+
+        var imageRefreshOptions = new ImageRefreshOptions(_directoryService)
+        {
+            ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [ImageType.Primary]
+        };
+
+        var dict = new Dictionary<Guid, BaseItem>();
+        var ids = new HashSet<Guid>(dict.Keys);
+
+        TraverseItems(BaseItemKind.Series);
+        TraverseItems(BaseItemKind.Season);
+        TraverseItems(BaseItemKind.Movie);
+        progress.Report(5);
+
+        var items = await context.Set<PosterRecord>().AsNoTracking().Where(x => ids.Contains(x.Id)).Select(x => x.Id)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        foreach (var id in items)
+            dict.Remove(id);
+
+        progress.Report(10);
+
+        var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
+
+        var metadataRefreshOptions =
+            new MetadataRefreshOptions(_directoryService)
+            {
+                IsAutomated = false,
+                ImageRefreshMode = imageRefreshOptions.ImageRefreshMode,
+                ReplaceImages = imageRefreshOptions.ReplaceImages
+            };
+
+        var currentProgress = 15d;
+        var increaseInProgress = (100 - currentProgress) / dict.Count;
+
+        _logger.LogInformation("Found {Items} items to refresh", dict.Count);
+
+        foreach (var (_, item) in dict)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var result = searcher.Search(item);
+            if (result.Exists)
+                await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
+
+            currentProgress += increaseInProgress;
+            progress.Report(currentProgress);
+        }
+
+        progress.Report(100d);
+        return;
+
+        void TraverseItems(BaseItemKind kind)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            foreach (var item in _libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
+            {
+                var allImageProviders = _providerManager.GetImageProviders(item, imageRefreshOptions);
+                if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName))
+                    continue;
+
+                dict.Add(item.Id, item);
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -41,10 +125,13 @@ public class UpdateTask : IScheduledTask
 
     /// <inheritdoc />
     public string Name => "Match and Update local posters";
+
     /// <inheritdoc />
     public string Key => "MatchAndUpdateLocalPosters";
+
     /// <inheritdoc />
     public string Description => "Update posters using local library";
+
     /// <inheritdoc />
     public string Category => "Local Posters";
 }

@@ -8,10 +8,8 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.IO;
 using MediaBrowser.Model.MediaInfo;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Providers;
 
@@ -20,29 +18,25 @@ namespace Jellyfin.Plugin.LocalPosters.Providers;
 /// </summary>
 public class LocalImageProvider : IDynamicImageProvider, IHasOrder
 {
-    private readonly ILogger<LocalImageProvider> _logger;
-    private readonly IFileSystem _fileSystem;
     private readonly IMatcherFactory _matcherFactory;
+    private readonly IImageSearcher _searcher;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly TimeProvider _timeProvider;
 
     /// <summary>
     ///
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="fileSystem"></param>
     /// <param name="matcherFactory"></param>
     /// <param name="serviceScopeFactory"></param>
     /// <param name="timeProvider"></param>
-    public LocalImageProvider(ILogger<LocalImageProvider> logger,
-        IFileSystem fileSystem, IMatcherFactory matcherFactory,
-        IServiceScopeFactory serviceScopeFactory, TimeProvider timeProvider)
+    /// <param name="searcher"></param>
+    public LocalImageProvider(IMatcherFactory matcherFactory,
+        IServiceScopeFactory serviceScopeFactory, TimeProvider timeProvider, IImageSearcher searcher)
     {
-        _logger = logger;
-        _fileSystem = fileSystem;
         _matcherFactory = matcherFactory;
         _serviceScopeFactory = serviceScopeFactory;
         _timeProvider = timeProvider;
+        _searcher = searcher;
     }
 
     /// <inheritdoc />
@@ -75,47 +69,30 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
         var record = await context.Set<PosterRecord>().FindAsync([item.Id], cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        var configuration = serviceScope.ServiceProvider.GetRequiredService<PluginConfiguration>();
-        var matcher = _matcherFactory.Create(item);
+        var file = _searcher.Search(item);
 
-        for (var i = configuration.Folders.Length - 1; i >= 0; i--)
+        if (!file.Exists)
+            return ValueCache.Empty.Value;
+
+        var now = _timeProvider.GetLocalNow();
+        if (record == null)
         {
-            foreach (var file in _fileSystem.GetFiles(configuration.Folders[i]))
-            {
-                _logger.LogMatching(file, item);
-
-                var match = matcher.IsMatch(file.Name);
-
-                if (!match)
-                    continue;
-
-                var now = _timeProvider.GetLocalNow();
-                if (record == null)
-                {
-                    record = new PosterRecord(item.Id, now, file);
-                    record.SetPosterFile(file, now);
-                    await context.Set<PosterRecord>().AddAsync(record, cancellationToken);
-                }
-                else
-                {
-                    record.SetPosterFile(file, now);
-                    context.Set<PosterRecord>().Update(record);
-                }
-
-                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-                _logger.LogMatched(item, file);
-
-                var borderReplacer = serviceScope.ServiceProvider.GetRequiredService<IBorderReplacer>();
-
-                return new DynamicImageResponse
-                {
-                    Stream = borderReplacer.Replace(file.FullName), HasImage = true, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
-                };
-            }
+            record = new PosterRecord(item.Id, now, file);
+            record.SetPosterFile(file, now);
+            await context.Set<PosterRecord>().AddAsync(record, cancellationToken);
+        }
+        else
+        {
+            record.SetPosterFile(file, now);
+            context.Set<PosterRecord>().Update(record);
         }
 
-        _logger.LogMissing(item);
-        return ValueCache.Empty.Value;
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        var borderReplacer = serviceScope.ServiceProvider.GetRequiredService<IBorderReplacer>();
+        return new DynamicImageResponse
+        {
+            Stream = borderReplacer.Replace(file.FullName), HasImage = true, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+        };
     }
 }
