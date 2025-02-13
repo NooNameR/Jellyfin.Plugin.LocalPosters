@@ -64,7 +64,16 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
         var file = _searcher.Search(item, cancellationToken);
 
         if (!file.Exists)
+        {
+            if (record == null)
+                return ValueCache.Empty.Value;
+
+            // remove existing record if were not able to match
+            dbSet.Remove(record);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
             return ValueCache.Empty.Value;
+        }
 
         var now = _timeProvider.GetLocalNow();
         if (record == null)
