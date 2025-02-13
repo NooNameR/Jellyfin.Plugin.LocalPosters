@@ -1,3 +1,5 @@
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -62,6 +64,16 @@ public class PosterRecord
     {
         MatchedAt = now;
         _posterPath = path.FullName;
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="libraryManager"></param>
+    /// <returns></returns>
+    public BaseItem? GetItem(ILibraryManager libraryManager)
+    {
+        return libraryManager.GetItemById(Id);
     }
 }
 
