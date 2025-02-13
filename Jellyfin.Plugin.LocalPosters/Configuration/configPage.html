@@ -27,11 +27,10 @@
                         class="checkboxOutline"><span class="material-icons checkboxIcon checkboxIcon-checked check"
                                                       aria-hidden="true"></span><span
                         class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span></span></label>
-                    <div class="fieldDescription checkboxFieldDescription">Change a border based on the settings bellow.
+                    <div class="fieldDescription checkboxFieldDescription">Change a border based on the settings below.
                     </div>
                 </div>
 
-                <!-- Remove Border Checkbox -->
                 <div class="checkboxContainer checkboxContainer-withDescription advanced"><label class="emby-checkbox-label"> <input
                     type="checkbox" is="emby-checkbox" class="chkEnableRealtimeMonitor emby-checkbox" checked="checked"
                     data-embycheckbox="true" id="removeBorderCheckbox" onchange="toggleBorderColor()"> <span class="checkboxLabel">Enable border removing</span>
@@ -40,11 +39,9 @@
                                                       aria-hidden="true"></span><span
                         class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span></span></label>
                     <div class="fieldDescription checkboxFieldDescription">Remove border from the poster image.
-                        systems.
                     </div>
                 </div>
 
-                <!-- Border Color Picker -->
                 <div class="selectContainer">
                     <label>
                         Border Color: <input is="emby-input" type="color" id="borderColorPicker">
@@ -52,7 +49,6 @@
                 </div>
                 <br/>
 
-                <!-- Folder List -->
                 <div class="folders">
                     <div style="display: flex; align-items: center;">
                         <h1>Folders</h1>
@@ -105,9 +101,12 @@
                     '<div class="listItemBody">' +
                     '<h3 class="listItemBodyText">' + folder + '</h3>' +
                     '</div>' +
-                    '<button type="button" is="paper-icon-button-light" class="listItemButton btnRemovePath paper-icon-button-light" data-index="' + index + '" onclick="removeFolder(' + index + ')" title="Remove">' +
-                    '<span class="material-icons remove_circle" aria-hidden="true"></span>' +
-                    '</button>' +
+                    '<button type="button" is="paper-icon-button-light" class="btnSortableMoveUp btnSortable paper-icon-button-light" title="Up" onclick="moveFolderUp(' + index + ')">' +
+                    '<span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>' +
+                    '<button type="button" is="paper-icon-button-light" class="btnSortableMoveDown btnSortable paper-icon-button-light" title="Down" onclick="moveFolderDown(' + index + ')">' +
+                    '<span class="material-icons keyboard_arrow_down" aria-hidden="true"></span></button>' +
+                    '<button type="button" is="paper-icon-button-light" class="btnRemovePath paper-icon-button-light" title="Remove" onclick="removeFolder(' + index + ')">' +
+                    '<span class="material-icons remove_circle" aria-hidden="true"></span></button>' +
                     '</div>';
             });
 
@@ -119,14 +118,28 @@
             if (folderInput && !config.Folders.includes(folderInput)) {
                 config.Folders.push(folderInput);
                 $('#newFolder').val('');
-                loadFolders(); // Update UI, but do not save yet
+                loadFolders();
             }
         }
 
         function removeFolder(index) {
             if (config.Folders[index]) {
                 config.Folders.splice(index, 1);
-                loadFolders(); // Update UI, but do not save yet
+                loadFolders();
+            }
+        }
+
+        function moveFolderUp(index) {
+            if (index > 0) {
+                [config.Folders[index], config.Folders[index - 1]] = [config.Folders[index - 1], config.Folders[index]];
+                loadFolders();
+            }
+        }
+
+        function moveFolderDown(index) {
+            if (index < config.Folders.length - 1) {
+                [config.Folders[index], config.Folders[index + 1]] = [config.Folders[index + 1], config.Folders[index]];
+                loadFolders();
             }
         }
 
@@ -137,10 +150,13 @@
             ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
                 Dashboard.alert("Configuration Updated Successfully");
             }).catch(function (err) {
-                Dashboard.alert({
-                    message: "Unexpected error occurred!"
-                });
+                Dashboard.alert({message: "Unexpected error occurred!"});
             });
+        }
+
+        function toggleFolderInput() {
+            var inputContainer = document.getElementById("folderInputContainer");
+            inputContainer.style.display = inputContainer.style.display === "none" ? "block" : "none";
         }
 
         function toggleBorderReplacer() {
@@ -155,5 +171,4 @@
     </script>
 </div>
 </body>
-
 </html>
