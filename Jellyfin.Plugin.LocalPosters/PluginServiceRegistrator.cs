@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.LocalPosters.Configuration;
+using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller;
@@ -27,9 +28,21 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
             ArgumentNullException.ThrowIfNull(LocalPostersPlugin.Instance);
             return LocalPostersPlugin.Instance;
         });
+        serviceCollection.AddScoped(GetDbSet<PosterRecord>);
+        serviceCollection.AddScoped(GetQueryable<PosterRecord>);
         serviceCollection.AddScoped<IImageSearcher, ImageSearcher>();
         serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
         serviceCollection.AddScoped(CreateBorderReplacer);
+    }
+
+    static DbSet<T> GetDbSet<T>(IServiceProvider provider) where T : class
+    {
+        return provider.GetRequiredService<Context>().Set<T>();
+    }
+
+    static IQueryable<T> GetQueryable<T>(IServiceProvider provider) where T : class
+    {
+        return provider.GetRequiredService<Context>().Set<T>().AsNoTracking();
     }
 
     static IBorderReplacer CreateBorderReplacer(IServiceProvider provider)

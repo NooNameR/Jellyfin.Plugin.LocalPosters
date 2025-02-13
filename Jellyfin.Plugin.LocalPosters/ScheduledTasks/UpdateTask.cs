@@ -1,6 +1,5 @@
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.LocalPosters.Entities;
-using Jellyfin.Plugin.LocalPosters.Logging;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -49,8 +48,8 @@ public class UpdateTask : IScheduledTask
 
 #pragma warning disable CA2007
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
-        await using var context = scope.ServiceProvider.GetRequiredService<Context>();
 #pragma warning restore CA2007
+        var queryable = scope.ServiceProvider.GetRequiredService<IQueryable<PosterRecord>>();
 
         var imageRefreshOptions = new ImageRefreshOptions(_directoryService)
         {
@@ -58,19 +57,14 @@ public class UpdateTask : IScheduledTask
         };
 
         var dict = new Dictionary<Guid, BaseItem>();
-        var ids = new HashSet<Guid>(dict.Keys);
+        var ids = new HashSet<Guid>(await queryable.Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
 
         TraverseItems(BaseItemKind.Series);
-        TraverseItems(BaseItemKind.Season);
-        TraverseItems(BaseItemKind.Movie);
         progress.Report(5);
-
-        var items = await context.Set<PosterRecord>().AsNoTracking().Where(x => ids.Contains(x.Id)).Select(x => x.Id)
-            .ToListAsync(cancellationToken).ConfigureAwait(false);
-        foreach (var id in items)
-            dict.Remove(id);
-
+        TraverseItems(BaseItemKind.Season);
         progress.Report(10);
+        TraverseItems(BaseItemKind.Movie);
+        progress.Report(15);
 
         var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
 
@@ -89,9 +83,7 @@ public class UpdateTask : IScheduledTask
 
         foreach (var (_, item) in dict)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var result = searcher.Search(item);
+            var result = searcher.Search(item, cancellationToken);
             if (result.Exists)
                 await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
 
@@ -109,7 +101,7 @@ public class UpdateTask : IScheduledTask
             foreach (var item in _libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
             {
                 var allImageProviders = _providerManager.GetImageProviders(item, imageRefreshOptions);
-                if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName))
+                if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName) || ids.Contains(item.Id))
                     continue;
 
                 dict.Add(item.Id, item);

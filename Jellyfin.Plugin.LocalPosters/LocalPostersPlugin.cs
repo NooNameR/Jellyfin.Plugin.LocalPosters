@@ -20,8 +20,7 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public const string ProviderName = "Local Posters";
 
     /// <inheritdoc />
-    public LocalPostersPlugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILoggerFactory loggerFactory,
-        TimeProvider timeProvider) : base(
+    public LocalPostersPlugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILoggerFactory loggerFactory) : base(
         applicationPaths,
         xmlSerializer)
     {
@@ -38,7 +37,7 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
             .UseLoggerFactory(loggerFactory)
             .EnableSensitiveDataLogging(false);
 
-        var context = new Context(optionsBuilder.Options, timeProvider);
+        var context = new Context(optionsBuilder.Options);
         try
         {
             context.ApplyMigration();

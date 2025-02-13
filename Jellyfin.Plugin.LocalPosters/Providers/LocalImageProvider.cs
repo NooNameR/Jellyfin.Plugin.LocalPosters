@@ -1,7 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.Entities;
-using Jellyfin.Plugin.LocalPosters.Logging;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
@@ -18,7 +16,6 @@ namespace Jellyfin.Plugin.LocalPosters.Providers;
 /// </summary>
 public class LocalImageProvider : IDynamicImageProvider, IHasOrder
 {
-    private readonly IMatcherFactory _matcherFactory;
     private readonly IImageSearcher _searcher;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly TimeProvider _timeProvider;
@@ -26,14 +23,11 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     /// <summary>
     ///
     /// </summary>
-    /// <param name="matcherFactory"></param>
     /// <param name="serviceScopeFactory"></param>
     /// <param name="timeProvider"></param>
     /// <param name="searcher"></param>
-    public LocalImageProvider(IMatcherFactory matcherFactory,
-        IServiceScopeFactory serviceScopeFactory, TimeProvider timeProvider, IImageSearcher searcher)
+    public LocalImageProvider(IServiceScopeFactory serviceScopeFactory, TimeProvider timeProvider, IImageSearcher searcher)
     {
-        _matcherFactory = matcherFactory;
         _serviceScopeFactory = serviceScopeFactory;
         _timeProvider = timeProvider;
         _searcher = searcher;
@@ -42,14 +36,11 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     /// <inheritdoc />
     public bool Supports(BaseItem item)
     {
-        return _matcherFactory.IsSupported(item);
+        return _searcher.IsSupported(item);
     }
 
     /// <inheritdoc />
     public string Name => LocalPostersPlugin.ProviderName;
-
-    /// <inheritdoc />
-    public int Order => 1;
 
     /// <inheritdoc />
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
@@ -66,10 +57,11 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
         await using var serviceScope = _serviceScopeFactory.CreateAsyncScope();
 
         var context = serviceScope.ServiceProvider.GetRequiredService<Context>();
-        var record = await context.Set<PosterRecord>().FindAsync([item.Id], cancellationToken: cancellationToken)
+        var dbSet = context.Set<PosterRecord>();
+        var record = await dbSet.FindAsync([item.Id], cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        var file = _searcher.Search(item);
+        var file = _searcher.Search(item, cancellationToken);
 
         if (!file.Exists)
             return ValueCache.Empty.Value;
@@ -79,12 +71,12 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
         {
             record = new PosterRecord(item.Id, now, file);
             record.SetPosterFile(file, now);
-            await context.Set<PosterRecord>().AddAsync(record, cancellationToken);
+            await dbSet.AddAsync(record, cancellationToken);
         }
         else
         {
             record.SetPosterFile(file, now);
-            context.Set<PosterRecord>().Update(record);
+            dbSet.Update(record);
         }
 
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -95,4 +87,7 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
             Stream = borderReplacer.Replace(file.FullName), HasImage = true, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
         };
     }
+
+    /// <inheritdoc />
+    public int Order => 1;
 }
