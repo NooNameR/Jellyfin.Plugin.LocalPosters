@@ -62,9 +62,9 @@ public class ImageSearcher : IImageSearcher
     public FileSystemMetadata Search(BaseItem item, CancellationToken cancellationToken)
     {
         var matcher = _matcherFactory.Create(item);
-        for (var i = _configuration.Folders.Length - 1; i >= 0; i--)
+        for (var i = 0; i < _configuration.Folders.Length; i++)
         {
-            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i]))
+            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i].LocalPath))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 

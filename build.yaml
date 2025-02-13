@@ -12,5 +12,9 @@ category: "Metadata"
 owner: "jellyfin"
 artifacts:
 - "Jellyfin.Plugin.LocalPosters.dll"
+- "Google.Apis.Core.dll"
+- "Google.Apis.Auth.dll"
+- "Google.Apis.dll"
+- "Google.Apis.Drive.v3.dll"
 changelog: >
   changelog
