@@ -15,52 +15,24 @@ namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 /// <summary>
 ///
 /// </summary>
-public class UpdateTask : IScheduledTask
+public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager,
+    IDirectoryService directoryService, IServiceScopeFactory serviceScopeFactory,
+    [FromKeyedServices(Constants.ScheduledTaskLockKey)]
+    SemaphoreSlim executionLock) : IScheduledTask
 {
-    private readonly ILibraryManager _libraryManager;
-    private readonly ILogger<UpdateTask> _logger;
-    private readonly IProviderManager _providerManager;
-    private readonly IDirectoryService _directoryService;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly SemaphoreSlim _executionLock;
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="libraryManager"></param>
-    /// <param name="logger"></param>
-    /// <param name="providerManager"></param>
-    /// <param name="directoryService"></param>
-    /// <param name="serviceScopeFactory"></param>
-    /// <param name="executionLock"></param>
-    public UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager,
-        IDirectoryService directoryService, IServiceScopeFactory serviceScopeFactory,
-        [FromKeyedServices(Constants.ScheduledTaskLockKey)]
-        SemaphoreSlim executionLock)
-    {
-        _libraryManager = libraryManager;
-        _logger = logger;
-        _providerManager = providerManager;
-        _directoryService = directoryService;
-        _serviceScopeFactory = serviceScopeFactory;
-        _executionLock = executionLock;
-    }
-
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         progress.Report(0);
 
-        await _executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
-#pragma warning disable CA2007
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-#pragma warning restore CA2007
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
             var queryable = scope.ServiceProvider.GetRequiredService<IQueryable<PosterRecord>>();
 
-            var imageRefreshOptions = new ImageRefreshOptions(_directoryService)
+            var imageRefreshOptions = new ImageRefreshOptions(directoryService)
             {
                 ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [ImageType.Primary]
             };
@@ -78,7 +50,7 @@ public class UpdateTask : IScheduledTask
             var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
 
             var metadataRefreshOptions =
-                new MetadataRefreshOptions(_directoryService)
+                new MetadataRefreshOptions(directoryService)
                 {
                     IsAutomated = false,
                     ImageRefreshMode = imageRefreshOptions.ImageRefreshMode,
@@ -88,7 +60,7 @@ public class UpdateTask : IScheduledTask
             var currentProgress = 15d;
             var increaseInProgress = (100 - currentProgress) / dict.Count;
 
-            _logger.LogInformation("Found {Items} items to refresh", dict.Count);
+            logger.LogInformation("Found {Items} items to refresh", dict.Count);
 
             foreach (var (_, item) in dict)
             {
@@ -106,9 +78,9 @@ public class UpdateTask : IScheduledTask
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                foreach (var item in _libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
+                foreach (var item in libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
                 {
-                    var allImageProviders = _providerManager.GetImageProviders(item, imageRefreshOptions);
+                    var allImageProviders = providerManager.GetImageProviders(item, imageRefreshOptions);
                     if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName) || ids.Contains(item.Id))
                         continue;
 
@@ -118,7 +90,7 @@ public class UpdateTask : IScheduledTask
         }
         finally
         {
-            _executionLock.Release();
+            executionLock.Release();
         }
     }
 

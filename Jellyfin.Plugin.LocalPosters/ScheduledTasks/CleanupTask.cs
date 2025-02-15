@@ -2,44 +2,26 @@ using Jellyfin.Plugin.LocalPosters.Entities;
 using MediaBrowser.Model.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 
 /// <summary>
 ///
 /// </summary>
-public class CleanupTask : IScheduledTask
+public class CleanupTask(
+    IServiceScopeFactory serviceScopeFactory,
+    [FromKeyedServices(Constants.ScheduledTaskLockKey)]
+    SemaphoreSlim executionLock) : IScheduledTask
 {
-    private readonly ILogger<UpdateTask> _logger;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly SemaphoreSlim _executionLock;
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="serviceScopeFactory"></param>
-    /// <param name="executionLock"></param>
-    public CleanupTask(ILogger<UpdateTask> logger, IServiceScopeFactory serviceScopeFactory,
-        [FromKeyedServices(Constants.ScheduledTaskLockKey)] SemaphoreSlim executionLock)
-    {
-        _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
-        _executionLock = executionLock;
-    }
-
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         progress.Report(0);
 
-        await _executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-#pragma warning disable CA2007
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-#pragma warning restore CA2007
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<Context>();
 
             var count = (double)await context.Set<PosterRecord>().AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
@@ -59,7 +41,7 @@ public class CleanupTask : IScheduledTask
         }
         finally
         {
-            _executionLock.Release();
+            executionLock.Release();
         }
     }
 

@@ -1,6 +1,7 @@
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Drive.v3;
-using Google.Apis.Services;
+using Google.Apis.Util.Store;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.GDrive;
@@ -40,8 +41,10 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddScoped<IImageSearcher, ImageSearcher>();
         serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
         serviceCollection.AddScoped(CreateBorderReplacer);
+        serviceCollection.AddSingleton<IDataStore>(provider =>
+            new FileDataStore(provider.GetRequiredService<LocalPostersPlugin>().GDriveTokenFolder, true));
         serviceCollection.AddScoped(CreateSyncClients);
-        serviceCollection.AddScoped(CreateDriveService);
+        serviceCollection.AddScoped<GDriveServiceProvider>();
         serviceCollection.AddKeyedScoped(GDriveSyncClient.DownloadLimiterKey, GetGDriveDownloadLimiter);
         serviceCollection.AddKeyedSingleton(Constants.ScheduledTaskLockKey, new SemaphoreSlim(1));
     }
@@ -59,7 +62,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         if (!configuration.Folders.Any(x => x.IsRemote))
             yield break;
 
-        var driveService = serviceProvider.GetRequiredService<DriveService>();
+        var driveServiceProvider = serviceProvider.GetRequiredService<GDriveServiceProvider>();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var fileSystem = serviceProvider.GetRequiredService<IFileSystem>();
         var downloadLimiter = serviceProvider.GetRequiredKeyedService<SemaphoreSlim>(GDriveSyncClient.DownloadLimiterKey);
@@ -70,34 +73,10 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
                 continue;
 
             yield return new GDriveSyncClient(loggerFactory.CreateLogger($"{nameof(GDriveSyncClient)}[{folder.RemoteId}]"),
-                driveService, folder.RemoteId,
+                driveServiceProvider, folder.RemoteId,
                 folder.LocalPath,
                 fileSystem, downloadLimiter);
         }
-    }
-
-
-    static DriveService CreateDriveService(IServiceProvider serviceProvider)
-    {
-        var configuration = serviceProvider.GetRequiredService<PluginConfiguration>();
-        var fileSystem = serviceProvider.GetRequiredService<IFileSystem>();
-
-        GoogleCredential? credential = null;
-        if (!string.IsNullOrEmpty(configuration.GoogleSaCredentialFile))
-        {
-            var saCredentialFile = fileSystem.GetFileInfo(configuration.GoogleSaCredentialFile);
-            if (saCredentialFile.Exists)
-                credential = GoogleCredential.FromFile(saCredentialFile.FullName)
-                    .CreateScoped(DriveService.Scope.Drive);
-        }
-
-        ArgumentNullException.ThrowIfNull(credential, nameof(credential));
-
-        return new DriveService(new BaseClientService.Initializer
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = GDriveSyncClient.ApplicationName
-        });
     }
 
     static DbSet<T> GetDbSet<T>(IServiceProvider provider) where T : class

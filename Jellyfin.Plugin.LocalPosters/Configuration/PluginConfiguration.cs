@@ -51,6 +51,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     ///
     /// </summary>
+    public string GoogleClientSecretFile { get; set; } = "/gdrive/client_secrets.json";
+
+    /// <summary>
+    ///
+    /// </summary>
     public string GoogleSaCredentialFile { get; set; } = "/gdrive/rclone_sa.json";
 
     /// <summary>

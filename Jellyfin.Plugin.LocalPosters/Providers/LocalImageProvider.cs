@@ -49,7 +49,6 @@ public class LocalImageProvider : IDynamicImageProvider, IHasOrder
     }
 
     /// <inheritdoc />
-    [SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task")]
     public async Task<DynamicImageResponse> GetImage(BaseItem item, ImageType type, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

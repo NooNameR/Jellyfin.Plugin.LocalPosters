@@ -9,47 +9,29 @@ namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 /// <summary>
 ///
 /// </summary>
-public class SyncGDriveTask : IScheduledTask
+public class SyncGDriveTask(
+    ILogger<UpdateTask> logger,
+    IServiceScopeFactory serviceScopeFactory,
+    ITaskManager manager,
+    [FromKeyedServices(Constants.ScheduledTaskLockKey)]
+    SemaphoreSlim executionLock) : IScheduledTask
 {
-    private readonly ILogger<UpdateTask> _logger;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ITaskManager _manager;
-    private readonly SemaphoreSlim _executionLock;
     private readonly object _sync = new();
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="serviceScopeFactory"></param>
-    /// <param name="manager"></param>
-    /// <param name="executionLock"></param>
-    public SyncGDriveTask(ILogger<UpdateTask> logger, IServiceScopeFactory serviceScopeFactory, ITaskManager manager,
-        [FromKeyedServices(Constants.ScheduledTaskLockKey)]
-        SemaphoreSlim executionLock)
-    {
-        _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
-        _manager = manager;
-        _executionLock = executionLock;
-    }
 
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         progress.Report(0);
 
-        await _executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-#pragma warning disable CA2007
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-#pragma warning restore CA2007
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
             var syncClients = scope.ServiceProvider.GetRequiredService<IEnumerable<ISyncClient>>().ToArray();
             var configuration = scope.ServiceProvider.GetRequiredService<PluginConfiguration>();
             var totalClients = syncClients.Length;
 
-            _logger.LogInformation("Syncing GDrive {FoldersCount} folders using {NumThreads} threads", totalClients,
+            logger.LogInformation("Syncing GDrive {FoldersCount} folders using {NumThreads} threads", totalClients,
                 configuration.ConcurrentDownloadLimit);
 
             var tasks = new List<Task>(totalClients);
@@ -83,15 +65,15 @@ public class SyncGDriveTask : IScheduledTask
 
             if (totalItems > 0)
             {
-                _logger.LogInformation("{Items} new items were downloaded, scheduling UpdateTask", totalItems);
-                _manager.QueueScheduledTask<UpdateTask>();
+                logger.LogInformation("{Items} new items were downloaded, scheduling UpdateTask", totalItems);
+                manager.QueueScheduledTask<UpdateTask>();
             }
 
             progress.Report(100);
         }
         finally
         {
-            _executionLock.Release();
+            executionLock.Release();
         }
     }
 

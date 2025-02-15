@@ -25,12 +25,16 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
         xmlSerializer)
     {
         const string PluginDirName = "local-posters";
-        var folder = Path.Join(applicationPaths.DataPath, PluginDirName);
+        var dataFolder = Path.Join(applicationPaths.DataPath, PluginDirName);
 
-        if (!Directory.Exists(folder))
-            Directory.CreateDirectory(folder);
+        if (!Directory.Exists(dataFolder))
+            Directory.CreateDirectory(dataFolder);
 
-        DbPath = Path.Join(folder, Context.DbName);
+        DbPath = Path.Join(dataFolder, Context.DbName);
+        GDriveTokenFolder = Path.Join(dataFolder, "gdrive");
+
+        if (Directory.Exists(GDriveTokenFolder))
+            Directory.CreateDirectory(GDriveTokenFolder);
 
         var optionsBuilder = new DbContextOptionsBuilder<Context>();
         optionsBuilder.UseSqlite($"Data Source={DbPath}")
@@ -44,12 +48,19 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
         catch (Exception e)
         {
+#pragma warning disable CA1848
             loggerFactory.CreateLogger<LocalPostersPlugin>().LogWarning(e, "Failed to perform migrations.");
+#pragma warning restore CA1848
         }
         finally { context.Dispose(); }
 
         Instance = this;
     }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public string GDriveTokenFolder { get; }
 
     /// <summary>
     ///

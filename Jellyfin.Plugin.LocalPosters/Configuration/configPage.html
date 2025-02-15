@@ -49,15 +49,32 @@
                 </div>
                 <br/>
 
-                <div class="selectContainer">
-                    <label>
-                        GDrive Credentials file: <input is="emby-input" type="text" id="googleSaCredentialFile">
+                <div class="checkboxList paperList" style="padding:.5em 1em">
+                    <label class="emby-checkbox-label">
+                        <input type="checkbox" is="emby-checkbox" id="isAuthorized" data-embycheckbox="true" class="emby-checkbox" disabled>
+                        <span class="checkboxLabel">Enable GDrive OAuth Integration</span>
+                        <span class="checkboxOutline">
+                            <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                            <span class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span>
+                        </span>
                     </label>
                 </div>
 
                 <div class="inputContainer">
+                    <input is="emby-input" type="text" id="googleClientSecretsFile" label="GDrive Client Secrets file path"/>
+                    <div class="fieldDescription">Secrets file for Google OAuth</div>
+                </div>
+
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="googleSaCredentialFile"
+                           label="GDrive Service Account file path"/>
+                    <div class="fieldDescription">Service Account file (OAuth is preferred method)</div>
+                </div>
+
+                <div class="inputContainer">
                     <label class="inputLabel inputLabelUnfocused">Number of concurrent requests to GDrive</label>
-                    <input is="emby-input" type="number" pattern="[0-9]*" min="0" max="100" step="1" class="emby-input" id="concurrentDownloadLimit">
+                    <input is="emby-input" type="number" pattern="[0-9]*" min="0" max="100" step="1" class="emby-input"
+                           id="concurrentDownloadLimit">
                     <div class="fieldDescription">Number of concurrent requests to the GDrive. High number can cause throttling</div>
                 </div>
 
@@ -100,6 +117,7 @@
             EnableBorderReplacer: true,
             RemoveBorder: true,
             BorderColor: "#000000",
+            GoogleClientSecretFile: "",
             GoogleSaCredentialFile: "",
             ConcurrentDownloadLimit: 0
         };
@@ -112,9 +130,22 @@
             document.getElementById("removeBorderCheckbox").checked = config.RemoveBorder || false;
             document.getElementById("borderColorPicker").value = config.BorderColor || "#000000";
             document.getElementById("googleSaCredentialFile").value = config.GoogleSaCredentialFile || "";
+            document.getElementById("googleClientSecretsFile").value = config.GoogleClientSecretFile || "";
             document.getElementById("concurrentDownloadLimit").value = config.ConcurrentDownloadLimit || 0;
             toggleBorderReplacer();
             loadFolders();
+        });
+
+        ApiClient.fetch({
+            url: ApiClient.getUrl('LocalPosters/GoogleAuthorization/Verify'),
+            type: 'GET'
+        }).then(async function (response) {
+            value = await response.json()
+            document.getElementById('isAuthorized').checked = value;
+        }).catch(function () {
+            document.getElementById('isAuthorized').checked = false;
+            document.getElementById('isAuthorized').disabled = false;
+            document.getElementById('isAuthorized').addEventListener('change', authorize);
         });
 
         function loadFolders() {
@@ -173,12 +204,53 @@
             }
         }
 
-        function save() {
+        async function authorize() {
+            var element = document.getElementById('isAuthorized')
+            if (!element.checked) {
+                return
+            }
+
+            element.disabled = true;
+
+            var request = {
+                url: ApiClient.getUrl('LocalPosters/GoogleAuthorization/Authorize'),
+                type: 'POST'
+            };
+            ApiClient.fetch(request).then(async function (response) {
+                var value = await response.json()
+
+                var win = window.open(value, '_blank');
+                if (win) {
+                    window.addEventListener('message', (event) => {
+                        if (event.data === 'auth_success') {
+                            element.value = true;
+                            Dashboard.alert('Google Authorization Successful!');
+                        }
+                    });
+
+                    win.focus();
+                } else {
+                    Dashboard.alert('Please allow popups for this website');
+                    element.value = false;
+                    element.disabled = false;
+                }
+            }).catch(function () {
+                element.value = false;
+                element.disabled = false;
+                Dashboard.alert({
+                    message: "Unexpected error occurred!"
+                });
+            });
+        }
+
+        async function save() {
             config.EnableBorderReplacer = document.getElementById("enableBorderReplacerCheckbox").checked;
             config.RemoveBorder = document.getElementById("removeBorderCheckbox").checked;
             config.BorderColor = document.getElementById("borderColorPicker").value;
             config.GoogleSaCredentialFile = document.getElementById("googleSaCredentialFile").value;
+            config.GoogleClientSecretFile = document.getElementById("googleClientSecretsFile").value || "";
             config.ConcurrentDownloadLimit = document.getElementById("concurrentDownloadLimit").value;
+
             ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
                 Dashboard.alert("Configuration Updated Successfully");
             }).catch(function (err) {
