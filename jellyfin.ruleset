@@ -64,6 +64,7 @@
         <Rule Id="CA1040" Action="Info" />
         <!-- disable warning CA1062: Validate arguments of public methods -->
         <Rule Id="CA1062" Action="Info" />
+        <Rule Id="CA1063" Action="Info" />
         <!-- TODO: enable when false positives are fixed -->
         <!-- disable warning CA1508: Avoid dead conditional code -->
         <Rule Id="CA1508" Action="Info" />
@@ -79,6 +80,7 @@
             If so, remove the code from the assembly.
             If this class is intended to contain only static members, make it static -->
         <Rule Id="CA1812" Action="Info" />
+        <Rule Id="CA1816" Action="Info" />
         <!-- disable warning CA1822: Member does not access instance data and can be marked as static -->
         <Rule Id="CA1822" Action="Info" />
         <!-- disable warning CA2000: Dispose objects before losing scope -->

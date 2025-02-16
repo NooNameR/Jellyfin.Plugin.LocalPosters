@@ -22,6 +22,7 @@ public sealed class GDriveServiceProvider(
 {
     private readonly SemaphoreSlim _lock = new(1);
     private DriveService? _driveService;
+    private static readonly HashSet<string> _scopes = [DriveService.Scope.DriveReadonly];
 
     /// <summary>
     ///
@@ -50,7 +51,7 @@ public sealed class GDriveServiceProvider(
 
                     var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                         clientSecrets.Secrets,
-                        [DriveService.Scope.Drive],
+                        _scopes,
                         GDriveSyncClient.User, cancellationToken, dataStore).ConfigureAwait(false);
 
                     if (string.IsNullOrEmpty(credential.Token.RefreshToken))
@@ -68,7 +69,7 @@ public sealed class GDriveServiceProvider(
             {
                 var credential = (await GoogleCredential.FromFileAsync(saCredentialFile.FullName, cancellationToken)
                         .ConfigureAwait(false))
-                    .CreateScoped(DriveService.Scope.Drive);
+                    .CreateScoped(_scopes);
 
                 _driveService = new DriveService(new BaseClientService.Initializer
                 {

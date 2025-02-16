@@ -52,7 +52,7 @@
                 <div class="checkboxList paperList" style="padding:.5em 1em">
                     <label class="emby-checkbox-label">
                         <input type="checkbox" is="emby-checkbox" id="isAuthorized" data-embycheckbox="true" class="emby-checkbox" disabled>
-                        <span class="checkboxLabel">Enable GDrive OAuth Integration</span>
+                        <span class="checkboxLabel" id="gdriveIntegrationText">Enable GDrive OAuth Integration</span>
                         <span class="checkboxOutline">
                             <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
                             <span class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span>
@@ -122,18 +122,35 @@
             ConcurrentDownloadLimit: 0
         };
 
+        // Get DOM elements using individual variables
+        const enableBorderReplacer = document.getElementById("enableBorderReplacerCheckbox");
+        const removeBorder = document.getElementById("removeBorderCheckbox");
+        const borderColor = document.getElementById("borderColorPicker");
+        const googleSaCredentialFile = document.getElementById("googleSaCredentialFile");
+        const googleClientSecretsFile = document.getElementById("googleClientSecretsFile");
+        const concurrentDownloadLimit = document.getElementById("concurrentDownloadLimit");
+        const isAuthorized = document.getElementById("isAuthorized");
+
         ApiClient.getPluginConfiguration(pluginId).then(function (savedConfig) {
             if (savedConfig) {
                 config = savedConfig;
             }
-            document.getElementById("enableBorderReplacerCheckbox").checked = config.EnableBorderReplacer || false;
-            document.getElementById("removeBorderCheckbox").checked = config.RemoveBorder || false;
-            document.getElementById("borderColorPicker").value = config.BorderColor || "#000000";
-            document.getElementById("googleSaCredentialFile").value = config.GoogleSaCredentialFile || "";
-            document.getElementById("googleClientSecretsFile").value = config.GoogleClientSecretFile || "";
-            document.getElementById("concurrentDownloadLimit").value = config.ConcurrentDownloadLimit || 0;
+            enableBorderReplacer.checked = config.EnableBorderReplacer || false;
+            removeBorder.checked = config.RemoveBorder || false;
+            borderColor.value = config.BorderColor || "#000000";
+            googleSaCredentialFile.value = config.GoogleSaCredentialFile || "";
+            googleClientSecretsFile.value = config.GoogleClientSecretFile || "";
+            concurrentDownloadLimit.value = config.ConcurrentDownloadLimit || 0;
             toggleBorderReplacer();
             loadFolders();
+        });
+
+        isAuthorized.addEventListener('change', function () {
+            if (isAuthorized.checked) {
+                document.getElementById('gdriveIntegrationText').text = 'GDrive Integration Enabled';
+            } else {
+                document.getElementById('gdriveIntegrationText').text = 'Enable GDrive Integration';
+            }
         });
 
         ApiClient.fetch({
@@ -141,11 +158,11 @@
             type: 'GET'
         }).then(async function (response) {
             value = await response.json()
-            document.getElementById('isAuthorized').checked = value;
+            isAuthorized.checked = value
         }).catch(function () {
-            document.getElementById('isAuthorized').checked = false;
-            document.getElementById('isAuthorized').disabled = false;
-            document.getElementById('isAuthorized').addEventListener('change', authorize);
+            isAuthorized.checked = false;
+            isAuthorized.disabled = false;
+            isAuthorized.addEventListener('change', authorize);
         });
 
         function loadFolders() {
@@ -205,25 +222,23 @@
         }
 
         async function authorize() {
-            var element = document.getElementById('isAuthorized')
-            if (!element.checked) {
+            if (!isAuthorized.checked) {
                 return
             }
 
-            element.disabled = true;
+            isAuthorized.disabled = true;
 
-            var request = {
+            ApiClient.fetch({
                 url: ApiClient.getUrl('LocalPosters/GoogleAuthorization/Authorize'),
                 type: 'POST'
-            };
-            ApiClient.fetch(request).then(async function (response) {
+            }).then(async function (response) {
                 var value = await response.json()
 
                 var win = window.open(value, '_blank');
                 if (win) {
                     window.addEventListener('message', (event) => {
                         if (event.data === 'auth_success') {
-                            element.value = true;
+                            isAuthorized.value = true;
                             Dashboard.alert('Google Authorization Successful!');
                         }
                     });
@@ -231,12 +246,12 @@
                     win.focus();
                 } else {
                     Dashboard.alert('Please allow popups for this website');
-                    element.value = false;
-                    element.disabled = false;
+                    isAuthorized.value = false;
+                    isAuthorized.disabled = false;
                 }
             }).catch(function () {
-                element.value = false;
-                element.disabled = false;
+                isAuthorized.value = false;
+                isAuthorized.disabled = false;
                 Dashboard.alert({
                     message: "Unexpected error occurred!"
                 });
@@ -244,15 +259,21 @@
         }
 
         async function save() {
-            config.EnableBorderReplacer = document.getElementById("enableBorderReplacerCheckbox").checked;
-            config.RemoveBorder = document.getElementById("removeBorderCheckbox").checked;
-            config.BorderColor = document.getElementById("borderColorPicker").value;
-            config.GoogleSaCredentialFile = document.getElementById("googleSaCredentialFile").value;
-            config.GoogleClientSecretFile = document.getElementById("googleClientSecretsFile").value || "";
-            config.ConcurrentDownloadLimit = document.getElementById("concurrentDownloadLimit").value;
+            var requiresAuthorization = googleClientSecretsFile.value && !config.GoogleClientSecretFile
 
-            ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
+            config.EnableBorderReplacer = enableBorderReplacer.checked;
+            config.RemoveBorder = removeBorder.checked;
+            config.BorderColor = borderColor.value;
+            config.GoogleSaCredentialFile = googleSaCredentialFile.value || "";
+            config.GoogleClientSecretFile = googleClientSecretsFile.value || "";
+            config.ConcurrentDownloadLimit = concurrentDownloadLimit.value;
+
+            ApiClient.updatePluginConfiguration(pluginId, config).then(async function () {
                 Dashboard.alert("Configuration Updated Successfully");
+
+                if (requiresAuthorization) {
+                    await authorize();
+                }
             }).catch(function (err) {
                 Dashboard.alert({message: "Unexpected error occurred!"});
             });
@@ -264,13 +285,13 @@
         }
 
         function toggleBorderReplacer() {
-            document.getElementById("removeBorderCheckbox").disabled = !document.getElementById("enableBorderReplacerCheckbox").checked;
+            removeBorder.disabled = !enableBorderReplacer.checked;
 
             toggleBorderColor()
         }
 
         function toggleBorderColor() {
-            document.getElementById("borderColorPicker").disabled = !document.getElementById("enableBorderReplacerCheckbox").checked || document.getElementById("removeBorderCheckbox").checked;
+            borderColor.disabled = !enableBorderReplacer.checked || removeBorder.checked;
         }
     </script>
 </div>

@@ -1,6 +1,3 @@
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Auth.OAuth2.Flows;
-using Google.Apis.Drive.v3;
 using Google.Apis.Util.Store;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.Entities;
@@ -12,6 +9,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.IO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -31,14 +29,17 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
             builder.UseSqlite($"Data Source={plugin.DbPath}");
         });
         serviceCollection.AddSingleton<IMatcherFactory, MatcherFactory>();
-        serviceCollection.AddScoped<LocalPostersPlugin>(_ =>
+        serviceCollection.AddSingleton<LocalPostersPlugin>(_ =>
         {
             ArgumentNullException.ThrowIfNull(LocalPostersPlugin.Instance);
             return LocalPostersPlugin.Instance;
         });
         serviceCollection.AddScoped(GetDbSet<PosterRecord>);
         serviceCollection.AddScoped(GetQueryable<PosterRecord>);
-        serviceCollection.AddScoped<IImageSearcher, ImageSearcher>();
+        serviceCollection.AddScoped<ImageSearcher>();
+        serviceCollection.AddScoped<IImageSearcher>(provider =>
+            new CachedImageSearcher(provider.GetRequiredService<ImageSearcher>(), provider.GetRequiredService<IMemoryCache>(),
+                provider.GetRequiredService<IFileSystem>(), provider.GetRequiredService<LocalPostersPlugin>()));
         serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
         serviceCollection.AddScoped(CreateBorderReplacer);
         serviceCollection.AddSingleton<IDataStore>(provider =>

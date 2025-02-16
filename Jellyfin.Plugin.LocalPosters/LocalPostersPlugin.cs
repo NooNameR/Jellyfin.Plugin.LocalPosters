@@ -12,8 +12,13 @@ namespace Jellyfin.Plugin.LocalPosters;
 /// <summary>
 ///
 /// </summary>
-public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
+#pragma warning disable IDISP025
+public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages, IDisposable
+#pragma warning restore IDISP025
 {
+    private readonly object _lock = new();
+    private CancellationTokenSource? _cancellationTokenSource;
+
     /// <summary>
     /// Gets the provider name.
     /// </summary>
@@ -41,6 +46,8 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
             .UseLoggerFactory(loggerFactory)
             .EnableSensitiveDataLogging(false);
 
+        ConfigurationChanged += (_, _) => ResetToken();
+
         var context = new Context(optionsBuilder.Options);
         try
         {
@@ -48,13 +55,26 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
         catch (Exception e)
         {
-#pragma warning disable CA1848
             loggerFactory.CreateLogger<LocalPostersPlugin>().LogWarning(e, "Failed to perform migrations.");
-#pragma warning restore CA1848
         }
         finally { context.Dispose(); }
 
         Instance = this;
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public CancellationToken ConfigurationToken
+    {
+        get
+        {
+            lock (_lock)
+            {
+                _cancellationTokenSource ??= new CancellationTokenSource();
+                return _cancellationTokenSource.Token;
+            }
+        }
     }
 
     /// <summary>
@@ -90,5 +110,24 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     GetType().Namespace)
             }
         ];
+    }
+
+    void ResetToken()
+    {
+        lock (_lock)
+        {
+            if (_cancellationTokenSource == null)
+                return;
+
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = null;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ResetToken();
     }
 }
