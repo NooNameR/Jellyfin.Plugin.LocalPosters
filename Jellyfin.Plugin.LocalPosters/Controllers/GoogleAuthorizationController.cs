@@ -49,7 +49,7 @@ public class GoogleAuthorizationController(
         var redirectUrl = $"{Request.Scheme}://{Request.Host}{Url.Action(nameof(Callback))}";
 
         var authUrl = flow.CreateAuthorizationCodeRequest(redirectUrl).Build();
-        logger.LogDebug("Redirecting to Google API: {AuthUrl}, with callback to: {CallbackUrl}", authUrl, redirectUrl);
+        logger.LogInformation("Redirecting to Google API: {AuthUrl}, with callback to: {CallbackUrl}", authUrl, redirectUrl);
 
         return Ok(authUrl.ToString());
     }
