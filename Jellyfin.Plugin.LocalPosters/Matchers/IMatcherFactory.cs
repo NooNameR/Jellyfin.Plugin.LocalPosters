@@ -1,3 +1,4 @@
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -31,6 +32,7 @@ public class MatcherFactory : IMatcherFactory
         { typeof(Movie), item => new MovieMatcher((Movie)item) },
         { typeof(Season), item => new SeasonMatcher((Season)item) },
         { typeof(Series), item => new SeriesMatcher((Series)item) },
+        { typeof(BoxSet), item => new MovieCollectionMatcher((BoxSet)item) }
     };
 
     /// <inheritdoc />
@@ -44,12 +46,9 @@ public class MatcherFactory : IMatcherFactory
     public IMatcher Create(BaseItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return item switch
-        {
-            Season season => new SeasonMatcher(season),
-            Series series => new SeriesMatcher(series),
-            Movie movie => new MovieMatcher(movie),
-            _ => throw new ArgumentException("Unknown item type")
-        };
+        if (!_factories.TryGetValue(item.GetType(), out var factory))
+            throw new InvalidOperationException($"No factory registered for type {item.GetType()}");
+
+        return factory(item);
     }
 }

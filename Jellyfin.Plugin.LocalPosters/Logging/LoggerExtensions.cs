@@ -21,6 +21,9 @@ public static class LoggerExtensions
     private static readonly Action<ILogger, string, int?, Exception?> _missingMovieMessage =
         LoggerMessage.Define<string, int?>(LogLevel.Information, 1, "Was not able to match movie: {Name} ({Year})");
 
+    private static readonly Action<ILogger, string, Exception?> _missingCollectionMessage =
+        LoggerMessage.Define<string>(LogLevel.Information, 1, "Was not able to match collection: {Name}");
+
     private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchingSeasonMessage =
         LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 2,
             "Matching file {FilePath} for series: {Name} ({Year}), Season: {Season}...");
@@ -31,6 +34,9 @@ public static class LoggerExtensions
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchingMovieMessage =
         LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for movie: {Name} ({Year})...");
 
+    private static readonly Action<ILogger, string, string, Exception?> _matchingCollectionMessage =
+        LoggerMessage.Define<string, string>(LogLevel.Debug, 2, "Matching file {FilePath} for movie: {Name}...");
+
     private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchedSeasonMessage =
         LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 3,
             "File {FilePath} match series: {Name} ({Year}), Season: {Season}");
@@ -40,6 +46,9 @@ public static class LoggerExtensions
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchedMovieMessage =
         LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match movie: {Name} ({Year})");
+
+    private static readonly Action<ILogger, string, string, Exception?> _matchedCollectionMessage =
+        LoggerMessage.Define<string, string>(LogLevel.Debug, 3, "File {FilePath} match movie: {Name}");
 
 
     /// <summary>
@@ -62,6 +71,9 @@ public static class LoggerExtensions
                 break;
             case Movie movie:
                 _matchingMovieMessage(logger, file.FullName, movie.Name, movie.ProductionYear, null);
+                break;
+            case BoxSet boxSet:
+                _matchingCollectionMessage(logger, file.FullName, boxSet.Name, null);
                 break;
         }
     }
@@ -87,6 +99,9 @@ public static class LoggerExtensions
             case Movie movie:
                 _matchedMovieMessage(logger, file.FullName, movie.Name, movie.ProductionYear, null);
                 break;
+            case BoxSet boxSet:
+                _matchedCollectionMessage(logger, file.FullName, boxSet.Name, null);
+                break;
         }
     }
 
@@ -107,6 +122,9 @@ public static class LoggerExtensions
                 break;
             case Movie movie:
                 _missingMovieMessage(logger, movie.Name, movie.ProductionYear, null);
+                break;
+            case BoxSet boxSet:
+                _missingCollectionMessage(logger, boxSet.Name, null);
                 break;
         }
     }

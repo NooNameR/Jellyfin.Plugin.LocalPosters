@@ -45,6 +45,7 @@ public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logg
             TraverseItems(BaseItemKind.Season);
             progress.Report(10);
             TraverseItems(BaseItemKind.Movie);
+            TraverseItems(BaseItemKind.BoxSet);
             progress.Report(15);
 
             var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
