@@ -8,6 +8,7 @@ using Jellyfin.Plugin.LocalPosters.GDrive;
 using MediaBrowser.Model.IO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Controllers;
 
@@ -22,7 +23,8 @@ public class GoogleAuthorizationController(
     PluginConfiguration configuration,
     GDriveServiceProvider provider,
     IFileSystem fileSystem,
-    IDataStore dataStore) : ControllerBase
+    IDataStore dataStore,
+    ILogger<GoogleAuthorizationController> logger) : ControllerBase
 {
     /// <summary>
     ///
@@ -45,7 +47,10 @@ public class GoogleAuthorizationController(
         });
 
         var redirectUrl = $"{Request.Scheme}://{Request.Host}{Url.Action(nameof(Callback))}";
+
         var authUrl = flow.CreateAuthorizationCodeRequest(redirectUrl).Build();
+        logger.LogDebug("Redirecting to Google API: {AuthUrl}, with callback to: {CallbackUrl}", authUrl, redirectUrl);
+
         return Ok(authUrl.ToString());
     }
 
