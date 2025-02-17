@@ -35,9 +35,25 @@ It was heavily inspired by: https://github.com/Drazzilb08/daps (So make sure to 
 
 ## Configuration
 
-Once installed, you need to specify the folder locations where your posters are stored. The latest folder in the list will have the highest priority, meaning Jellyfin will use posters from that folder first if duplicates exist.
+Once installed, you need to specify the folder locations where your posters are stored. `Local Posters` image fetcher should be enabled for desired libraries
 
 Additionally, you can modify poster borders using the **border replacer** feature. To enable and configure this, navigate to the plugin settings within Jellyfin.
+
+### Creating Client Secrets for GDrive Integration
+To enable GDrive integration with `./auth/drive.file` scope:
+1. **Google Cloud Console:** [console.cloud.google.com](https://console.cloud.google.com/)
+2. **Create Project:** Click project dropdown, select **New Project**, and name it.
+3. **Enable Google Drive API:** Navigate to **APIs & Services > Library** and enable **Google Drive API**.
+4. **Create OAuth 2.0 Credentials:**
+    - Under **APIs & Services > Credentials**, create **OAuth client ID**.
+    - Configure consent screen (**External**, add app name, save).
+    - Set **Authorized Redirect URI**: `{YOUR_JELLYFIN_ADDRESS}/LocalPosters/GoogleAuthorization/Callback`
+    - Select **Web application**, download `client_secrets.json`.
+5. **Set Scopes:** Add `https://www.googleapis.com/auth/drive.file`.
+6. **Publish Application:** Publish the OAuth consent screen for external access. Please note if you use "Test Audience" refresh token will expire withing 7 days, with current scope application won't require "Verification"
+7. **Upload Client Secrets:** Place `client_secrets.json` into directory visible for Jellyfin and change Plugin configuration accordingly.
+
+Once configuration is done, plugin will keep syncing folders and searching for missing images in the selected libraries, no manual interaction is required! 😊
 
 ## Support
 
