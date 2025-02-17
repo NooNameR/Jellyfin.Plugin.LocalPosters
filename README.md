@@ -6,7 +6,13 @@ It was heavily inspired by: https://github.com/Drazzilb08/daps (So make sure to 
 
 ## Features
 
-- **Local Artwork Priority**: The plugin ensures that any locally stored poster images in your media folders are used as the primary artwork, providing a personalized media browsing experience.
+- **Local Artwork Priority**: The plugin ensures that any locally stored poster images are used as the primary artwork, providing a personalized experience.
+- **GDrive Sync**: Sync GDrive folders using either (OAuth2 or Service Account)
+
+![Screenshot 2025-02-17 at 15 38 08](https://github.com/user-attachments/assets/6a716f88-268d-4781-a2fb-cc1aefc723f3)
+
+
+📌 Images shown are just a preview of the functionality and do not represent any local library
 
 ## Installation
 
