@@ -38,7 +38,7 @@ public class CachedImageSearcher(IImageSearcher searcher, IMemoryCache cache, IF
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .AddExpirationToken(new CancellationChangeToken(plugin.ConfigurationToken))
                 .SetAbsoluteExpiration(_cacheDuration);
-            cache.Set(CacheKey(item), file.FullName, cacheEntryOptions);
+            cache.Set(cacheKey, file.FullName, cacheEntryOptions);
         }
 
         return file;
