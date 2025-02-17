@@ -49,6 +49,35 @@
                 </div>
                 <br/>
 
+                <div class="checkboxList paperList" style="padding:.5em 1em">
+                    <label class="emby-checkbox-label">
+                        <input type="checkbox" is="emby-checkbox" id="isAuthorized" data-embycheckbox="true" class="emby-checkbox" disabled>
+                        <span class="checkboxLabel" id="gdriveIntegrationText">Enable GDrive OAuth Integration</span>
+                        <span class="checkboxOutline">
+                            <span class="material-icons checkboxIcon checkboxIcon-checked check" aria-hidden="true"></span>
+                            <span class="material-icons checkboxIcon checkboxIcon-unchecked " aria-hidden="true"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="googleClientSecretsFile" label="GDrive Client Secrets file path"/>
+                    <div class="fieldDescription">Secrets file for Google OAuth</div>
+                </div>
+
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="googleSaCredentialFile"
+                           label="GDrive Service Account file path"/>
+                    <div class="fieldDescription">Service Account file (OAuth is preferred method)</div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused">Number of concurrent requests to GDrive</label>
+                    <input is="emby-input" type="number" pattern="[0-9]*" min="0" max="100" step="1" class="emby-input"
+                           id="concurrentDownloadLimit">
+                    <div class="fieldDescription">Number of concurrent requests to the GDrive. High number can cause throttling</div>
+                </div>
+
                 <div class="folders">
                     <div style="display: flex; align-items: center;">
                         <h1>Folders</h1>
@@ -59,6 +88,10 @@
                     </div>
 
                     <div id="folderInputContainer" style="display: none; margin-top: 10px;">
+                        <div class="fieldDescription"><a is="emby-linkbutton" rel="noopener noreferrer" class="button-link emby-button"
+                                                         href="https://github.com/christophedc0/Dump/blob/main/DAPS/gdrives.md"
+                                                         target="_blank">Currently known list of GDrive folders</a></div>
+                        <input type="text" id="newGDrive" class="emby-input" placeholder="Enter google drive id or leave it empty">
                         <input type="text" id="newFolder" class="emby-input" placeholder="Enter folder path">
                         <button is="emby-button" type="button" class="raised button-submit emby-button"
                                 onclick="addFolder()">
@@ -79,17 +112,57 @@
 
     <script type="text/javascript">
         var pluginId = "3938fe98-b7b2-4333-b678-c4c4e339d232";
-        var config = {Folders: [], EnableBorderReplacer: true, RemoveBorder: true, BorderColor: "#000000"};
+        var config = {
+            Folders: [],
+            EnableBorderReplacer: true,
+            RemoveBorder: true,
+            BorderColor: "#000000",
+            GoogleClientSecretFile: "",
+            GoogleSaCredentialFile: "",
+            ConcurrentDownloadLimit: 0
+        };
+
+        // Get DOM elements using individual variables
+        const enableBorderReplacerElement = document.getElementById("enableBorderReplacerCheckbox");
+        const removeBorderElement = document.getElementById("removeBorderCheckbox");
+        const borderColorElement = document.getElementById("borderColorPicker");
+        const googleSaCredentialFileElement = document.getElementById("googleSaCredentialFile");
+        const googleClientSecretsFileElement = document.getElementById("googleClientSecretsFile");
+        const concurrentDownloadLimitElement = document.getElementById("concurrentDownloadLimit");
+        const isAuthorizedElement = document.getElementById("isAuthorized");
 
         ApiClient.getPluginConfiguration(pluginId).then(function (savedConfig) {
             if (savedConfig) {
                 config = savedConfig;
             }
-            document.getElementById("enableBorderReplacerCheckbox").checked = config.EnableBorderReplacer || false;
-            document.getElementById("removeBorderCheckbox").checked = config.RemoveBorder || false;
-            document.getElementById("borderColorPicker").value = config.BorderColor || "#000000";
+            enableBorderReplacerElement.checked = config.EnableBorderReplacer || false;
+            removeBorderElement.checked = config.RemoveBorder || false;
+            borderColorElement.value = config.BorderColor || "#000000";
+            googleSaCredentialFileElement.value = config.GoogleSaCredentialFile || "";
+            googleClientSecretsFileElement.value = config.GoogleClientSecretFile || "";
+            concurrentDownloadLimitElement.value = config.ConcurrentDownloadLimit || 0;
             toggleBorderReplacer();
             loadFolders();
+        });
+
+        isAuthorizedElement.addEventListener('change', function () {
+            if (isAuthorizedElement.checked) {
+                document.getElementById('gdriveIntegrationText').text = 'GDrive Integration Enabled';
+            } else {
+                document.getElementById('gdriveIntegrationText').text = 'Enable GDrive Integration';
+            }
+        });
+
+        ApiClient.fetch({
+            url: ApiClient.getUrl('LocalPosters/GoogleAuthorization/Verify'),
+            type: 'GET'
+        }).then(async function (response) {
+            value = await response.json()
+            isAuthorizedElement.checked = value
+        }).catch(function () {
+            isAuthorizedElement.checked = false;
+            isAuthorizedElement.disabled = false;
+            isAuthorizedElement.addEventListener('change', authorize);
         });
 
         function loadFolders() {
@@ -98,8 +171,9 @@
 
             config.Folders.forEach(function (folder, index) {
                 html += '<div class="listItem listItem-border lnkPath" data-index="' + index + '">' +
+                    (folder.RemoteId ? '<span class="material-icons add_to_drive" aria-hidden="true" title="' + folder.RemoteId + '"></span>' : '') +
                     '<div class="listItemBody">' +
-                    '<h3 class="listItemBodyText">' + folder + '</h3>' +
+                    '<h3 class="listItemBodyText">' + folder.LocalPath + '</h3>' +
                     '</div>' +
                     '<button type="button" is="paper-icon-button-light" class="btnSortableMoveUp btnSortable paper-icon-button-light" title="Up" onclick="moveFolderUp(' + index + ')">' +
                     '<span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>' +
@@ -114,11 +188,15 @@
         }
 
         function addFolder() {
+            var gDriveInput = $('#newGDrive').val().trim();
             var folderInput = $('#newFolder').val().trim();
-            if (folderInput && !config.Folders.includes(folderInput)) {
-                config.Folders.push(folderInput);
+            if (folderInput && !config.Folders.some(x => x.RemoteId === gDriveInput || x.LocalPath === folderInput)) {
+                config.Folders.push({RemoteId: gDriveInput, LocalPath: folderInput});
                 $('#newFolder').val('');
+                $('#newGDrive').val('');
                 loadFolders();
+            } else {
+                Dashboard.alert({message: "Folder is already in use!"});
             }
         }
 
@@ -143,12 +221,59 @@
             }
         }
 
-        function save() {
-            config.EnableBorderReplacer = document.getElementById("enableBorderReplacerCheckbox").checked;
-            config.RemoveBorder = document.getElementById("removeBorderCheckbox").checked;
-            config.BorderColor = document.getElementById("borderColorPicker").value;
-            ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
+        async function authorize() {
+            if (!isAuthorizedElement.checked) {
+                return
+            }
+
+            isAuthorizedElement.disabled = true;
+
+            ApiClient.fetch({
+                url: ApiClient.getUrl('LocalPosters/GoogleAuthorization/Authorize'),
+                type: 'POST'
+            }).then(async function (response) {
+                var value = await response.json()
+
+                var win = window.open(value, '_blank');
+                if (win) {
+                    window.addEventListener('message', (event) => {
+                        if (event.data === 'auth_success') {
+                            isAuthorizedElement.value = true;
+                            Dashboard.alert('Google Authorization Successful!');
+                        }
+                    });
+
+                    win.focus();
+                } else {
+                    Dashboard.alert('Please allow popups for this website');
+                    isAuthorizedElement.value = false;
+                    isAuthorizedElement.disabled = false;
+                }
+            }).catch(function () {
+                isAuthorizedElement.value = false;
+                isAuthorizedElement.disabled = false;
+                Dashboard.alert({
+                    message: "Unexpected error occurred!"
+                });
+            });
+        }
+
+        async function save() {
+            var requiresAuthorization = googleClientSecretsFileElement.value && !config.GoogleClientSecretFile
+
+            config.EnableBorderReplacer = enableBorderReplacerElement.checked;
+            config.RemoveBorder = removeBorderElement.checked;
+            config.BorderColor = borderColorElement.value;
+            config.GoogleSaCredentialFile = googleSaCredentialFileElement.value || "";
+            config.GoogleClientSecretFile = googleClientSecretsFileElement.value || "";
+            config.ConcurrentDownloadLimit = concurrentDownloadLimitElement.value;
+
+            ApiClient.updatePluginConfiguration(pluginId, config).then(async function () {
                 Dashboard.alert("Configuration Updated Successfully");
+
+                if (requiresAuthorization) {
+                    await authorize();
+                }
             }).catch(function (err) {
                 Dashboard.alert({message: "Unexpected error occurred!"});
             });
@@ -160,15 +285,16 @@
         }
 
         function toggleBorderReplacer() {
-            document.getElementById("removeBorderCheckbox").disabled = !document.getElementById("enableBorderReplacerCheckbox").checked;
+            removeBorderElement.disabled = !enableBorderReplacerElement.checked;
 
             toggleBorderColor()
         }
 
         function toggleBorderColor() {
-            document.getElementById("borderColorPicker").disabled = !document.getElementById("enableBorderReplacerCheckbox").checked || document.getElementById("removeBorderCheckbox").checked;
+            borderColorElement.disabled = !enableBorderReplacerElement.checked || removeBorderElement.checked;
         }
     </script>
 </div>
 </body>
 </html>
+`

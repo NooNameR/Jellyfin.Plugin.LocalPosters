@@ -12,8 +12,13 @@ namespace Jellyfin.Plugin.LocalPosters;
 /// <summary>
 ///
 /// </summary>
-public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
+#pragma warning disable IDISP025
+public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages, IDisposable
+#pragma warning restore IDISP025
 {
+    private readonly object _lock = new();
+    private CancellationTokenSource? _cancellationTokenSource;
+
     /// <summary>
     /// Gets the provider name.
     /// </summary>
@@ -25,17 +30,23 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
         xmlSerializer)
     {
         const string PluginDirName = "local-posters";
-        var folder = Path.Join(applicationPaths.DataPath, PluginDirName);
+        var dataFolder = Path.Join(applicationPaths.DataPath, PluginDirName);
 
-        if (!Directory.Exists(folder))
-            Directory.CreateDirectory(folder);
+        if (!Directory.Exists(dataFolder))
+            Directory.CreateDirectory(dataFolder);
 
-        DbPath = Path.Join(folder, Context.DbName);
+        DbPath = Path.Join(dataFolder, Context.DbName);
+        GDriveTokenFolder = Path.Join(dataFolder, "gdrive");
+
+        if (Directory.Exists(GDriveTokenFolder))
+            Directory.CreateDirectory(GDriveTokenFolder);
 
         var optionsBuilder = new DbContextOptionsBuilder<Context>();
         optionsBuilder.UseSqlite($"Data Source={DbPath}")
             .UseLoggerFactory(loggerFactory)
             .EnableSensitiveDataLogging(false);
+
+        ConfigurationChanged += (_, _) => ResetToken();
 
         var context = new Context(optionsBuilder.Options);
         try
@@ -50,6 +61,26 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
         Instance = this;
     }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public CancellationToken ConfigurationToken
+    {
+        get
+        {
+            lock (_lock)
+            {
+                _cancellationTokenSource ??= new CancellationTokenSource();
+                return _cancellationTokenSource.Token;
+            }
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public string GDriveTokenFolder { get; }
 
     /// <summary>
     ///
@@ -79,5 +110,24 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     GetType().Namespace)
             }
         ];
+    }
+
+    void ResetToken()
+    {
+        lock (_lock)
+        {
+            if (_cancellationTokenSource == null)
+                return;
+
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = null;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ResetToken();
     }
 }

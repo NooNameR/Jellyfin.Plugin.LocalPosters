@@ -33,13 +33,6 @@ public class MatcherFactory : IMatcherFactory
         { typeof(Series), item => new SeriesMatcher((Series)item) },
     };
 
-    /// <summary>
-    ///
-    /// </summary>
-    public MatcherFactory()
-    {
-    }
-
     /// <inheritdoc />
     public bool IsSupported(BaseItem item)
     {

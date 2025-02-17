@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Apis.Drive.v3" />
     <PackageReference Include="Jellyfin.Common"/>
     <PackageReference Include="Jellyfin.Controller"/>
     <PackageReference Include="Jellyfin.Data"/>
@@ -20,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html"/>
+    <EmbeddedResource Include="Configuration\gdrives.json" />
   </ItemGroup>
 
 </Project>

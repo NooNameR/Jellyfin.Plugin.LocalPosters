@@ -6,19 +6,8 @@ namespace Jellyfin.Plugin.LocalPosters.Utils;
 /// <summary>
 ///
 /// </summary>
-public class SkiaSharpBorderReplacer : IBorderReplacer
+public class SkiaSharpBorderReplacer(SKColor color) : IBorderReplacer
 {
-    private readonly SKColor _color;
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="color"></param>
-    public SkiaSharpBorderReplacer(SKColor color)
-    {
-        _color = color;
-    }
-
     /// <inheritdoc />
     public Stream Replace(string source)
     {
@@ -41,7 +30,7 @@ public class SkiaSharpBorderReplacer : IBorderReplacer
         using SKBitmap newImage = new SKBitmap(width, height);
         using (var canvas = new SKCanvas(newImage))
         {
-            canvas.Clear(_color); // Fill background with custom color
+            canvas.Clear(color); // Fill background with custom color
             canvas.DrawBitmap(cropped, new SKPoint(25, 25)); // Paste cropped image
         }
 

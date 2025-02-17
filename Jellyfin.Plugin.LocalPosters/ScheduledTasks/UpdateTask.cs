@@ -15,97 +15,82 @@ namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 /// <summary>
 ///
 /// </summary>
-public class UpdateTask : IScheduledTask
+public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager,
+    IDirectoryService directoryService, IServiceScopeFactory serviceScopeFactory,
+    [FromKeyedServices(Constants.ScheduledTaskLockKey)]
+    SemaphoreSlim executionLock) : IScheduledTask
 {
-    private readonly ILibraryManager _libraryManager;
-    private readonly ILogger<UpdateTask> _logger;
-    private readonly IProviderManager _providerManager;
-    private readonly IDirectoryService _directoryService;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="libraryManager"></param>
-    /// <param name="logger"></param>
-    /// <param name="providerManager"></param>
-    /// <param name="directoryService"></param>
-    /// <param name="serviceScopeFactory"></param>
-    public UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager,
-        IDirectoryService directoryService, IServiceScopeFactory serviceScopeFactory)
-    {
-        _libraryManager = libraryManager;
-        _logger = logger;
-        _providerManager = providerManager;
-        _directoryService = directoryService;
-        _serviceScopeFactory = serviceScopeFactory;
-    }
-
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         progress.Report(0);
 
-#pragma warning disable CA2007
-        await using var scope = _serviceScopeFactory.CreateAsyncScope();
-#pragma warning restore CA2007
-        var queryable = scope.ServiceProvider.GetRequiredService<IQueryable<PosterRecord>>();
+        await executionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-        var imageRefreshOptions = new ImageRefreshOptions(_directoryService)
+        try
         {
-            ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [ImageType.Primary]
-        };
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var queryable = scope.ServiceProvider.GetRequiredService<IQueryable<PosterRecord>>();
 
-        var dict = new Dictionary<Guid, BaseItem>();
-        var ids = new HashSet<Guid>(await queryable.Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
-
-        TraverseItems(BaseItemKind.Series);
-        progress.Report(5);
-        TraverseItems(BaseItemKind.Season);
-        progress.Report(10);
-        TraverseItems(BaseItemKind.Movie);
-        progress.Report(15);
-
-        var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
-
-        var metadataRefreshOptions =
-            new MetadataRefreshOptions(_directoryService)
+            var imageRefreshOptions = new ImageRefreshOptions(directoryService)
             {
-                IsAutomated = false,
-                ImageRefreshMode = imageRefreshOptions.ImageRefreshMode,
-                ReplaceImages = imageRefreshOptions.ReplaceImages
+                ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [ImageType.Primary]
             };
 
-        var currentProgress = 15d;
-        var increaseInProgress = (100 - currentProgress) / dict.Count;
+            var dict = new Dictionary<Guid, BaseItem>();
+            var ids = new HashSet<Guid>(await queryable.Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
 
-        _logger.LogInformation("Found {Items} items to refresh", dict.Count);
+            TraverseItems(BaseItemKind.Series);
+            progress.Report(5);
+            TraverseItems(BaseItemKind.Season);
+            progress.Report(10);
+            TraverseItems(BaseItemKind.Movie);
+            progress.Report(15);
 
-        foreach (var (_, item) in dict)
-        {
-            var result = searcher.Search(item, cancellationToken);
-            if (result.Exists)
-                await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
+            var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
 
-            currentProgress += increaseInProgress;
-            progress.Report(currentProgress);
-        }
+            var metadataRefreshOptions =
+                new MetadataRefreshOptions(directoryService)
+                {
+                    IsAutomated = false,
+                    ImageRefreshMode = imageRefreshOptions.ImageRefreshMode,
+                    ReplaceImages = imageRefreshOptions.ReplaceImages
+                };
 
-        progress.Report(100d);
-        return;
+            var currentProgress = 15d;
+            var increaseInProgress = (100 - currentProgress) / dict.Count;
 
-        void TraverseItems(BaseItemKind kind)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+            logger.LogInformation("Found {Items} items to refresh", dict.Count);
 
-            foreach (var item in _libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
+            foreach (var (_, item) in dict)
             {
-                var allImageProviders = _providerManager.GetImageProviders(item, imageRefreshOptions);
-                if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName) || ids.Contains(item.Id))
-                    continue;
+                var result = searcher.Search(item, cancellationToken);
+                if (result.Exists)
+                    await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
 
-                dict.Add(item.Id, item);
+                currentProgress += increaseInProgress;
+                progress.Report(currentProgress);
             }
+
+            progress.Report(100d);
+
+            void TraverseItems(BaseItemKind kind)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                foreach (var item in libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
+                {
+                    var allImageProviders = providerManager.GetImageProviders(item, imageRefreshOptions);
+                    if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName) || ids.Contains(item.Id))
+                        continue;
+
+                    dict.Add(item.Id, item);
+                }
+            }
+        }
+        finally
+        {
+            executionLock.Release();
         }
     }
 
