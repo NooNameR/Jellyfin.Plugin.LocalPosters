@@ -5,6 +5,7 @@ using Google.Apis.Drive.v3;
 using Google.Apis.Util.Store;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.GDrive;
+using MediaBrowser.Controller;
 using MediaBrowser.Model.IO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +21,21 @@ namespace Jellyfin.Plugin.LocalPosters.Controllers;
 [Route("LocalPosters/[controller]/[action]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class GoogleAuthorizationController(
+    IServerApplicationHost host,
     PluginConfiguration configuration,
     GDriveServiceProvider provider,
     IFileSystem fileSystem,
     IDataStore dataStore,
     ILogger<GoogleAuthorizationController> logger) : ControllerBase
 {
+    private string? RedirectUrl()
+    {
+        var url = host.GetSmartApiUrl(Request);
+        return string.IsNullOrEmpty(url)
+            ? Url.Action("Callback", "GoogleAuthorization", null, Request.Scheme)
+            : new Uri(new Uri(url), Url.Action("Callback", "GoogleAuthorization")).ToString();
+    }
+
     /// <summary>
     ///
     /// </summary>
@@ -46,8 +56,7 @@ public class GoogleAuthorizationController(
             ClientSecrets = clientSecrets.Secrets, Scopes = [DriveService.Scope.Drive], DataStore = dataStore
         });
 
-        var redirectUrl = $"{Request.Scheme}://{Request.Host}{Url.Action(nameof(Callback))}";
-
+        var redirectUrl = RedirectUrl();
         var authUrl = flow.CreateAuthorizationCodeRequest(redirectUrl).Build();
         logger.LogInformation("Redirecting to Google API: {AuthUrl}, with callback to: {CallbackUrl}", authUrl, redirectUrl);
 
@@ -84,14 +93,12 @@ public class GoogleAuthorizationController(
 
         ArgumentNullException.ThrowIfNull(clientSecrets, nameof(clientSecrets));
 
-        var redirectUrl = $"{Request.Scheme}://{Request.Host}{Url.Action(nameof(Callback))}";
-
         using var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
             ClientSecrets = clientSecrets.Secrets, Scopes = [DriveService.Scope.Drive], DataStore = dataStore
         });
 
-        await flow.ExchangeCodeForTokenAsync(GDriveSyncClient.User, code, redirectUrl, CancellationToken.None)
+        await flow.ExchangeCodeForTokenAsync(GDriveSyncClient.User, code, RedirectUrl(), CancellationToken.None)
             .ConfigureAwait(false);
 
         const string Html = """
