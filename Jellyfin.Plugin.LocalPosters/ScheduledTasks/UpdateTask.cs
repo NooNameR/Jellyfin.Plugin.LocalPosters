@@ -1,6 +1,6 @@
-using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.Matchers;
+using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -15,8 +15,13 @@ namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 /// <summary>
 ///
 /// </summary>
-public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logger, IProviderManager providerManager,
-    IDirectoryService directoryService, IServiceScopeFactory serviceScopeFactory,
+public class UpdateTask(
+    ILibraryManager libraryManager,
+    ILogger<UpdateTask> logger,
+    IProviderManager providerManager,
+    IDirectoryService directoryService,
+    IServiceScopeFactory serviceScopeFactory,
+    IMatcherFactory matcherFactory,
     [FromKeyedServices(Constants.ScheduledTaskLockKey)]
     SemaphoreSlim executionLock) : IScheduledTask
 {
@@ -40,13 +45,20 @@ public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logg
             var dict = new Dictionary<Guid, BaseItem>();
             var ids = new HashSet<Guid>(await queryable.Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
 
-            TraverseItems(BaseItemKind.Series);
-            progress.Report(5);
-            TraverseItems(BaseItemKind.Season);
-            progress.Report(10);
-            TraverseItems(BaseItemKind.Movie);
-            TraverseItems(BaseItemKind.BoxSet);
-            progress.Report(15);
+            var currentProgress = 0d;
+            foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
+                     {
+                         IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ExcludeItemIds = [..ids]
+                     }))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
+                    dict.Add(item.Id, item);
+            }
+
+            currentProgress += 10;
+            progress.Report(currentProgress);
 
             var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
 
@@ -58,7 +70,6 @@ public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logg
                     ReplaceImages = imageRefreshOptions.ReplaceImages
                 };
 
-            var currentProgress = 15d;
             var increaseInProgress = (100 - currentProgress) / dict.Count;
 
             logger.LogInformation("Found {Items} items to refresh", dict.Count);
@@ -74,20 +85,6 @@ public class UpdateTask(ILibraryManager libraryManager, ILogger<UpdateTask> logg
             }
 
             progress.Report(100d);
-
-            void TraverseItems(BaseItemKind kind)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                foreach (var item in libraryManager.GetItemList(new InternalItemsQuery { IncludeItemTypes = [kind] }))
-                {
-                    var allImageProviders = providerManager.GetImageProviders(item, imageRefreshOptions);
-                    if (allImageProviders.All(x => x.Name != LocalPostersPlugin.ProviderName) || ids.Contains(item.Id))
-                        continue;
-
-                    dict.Add(item.Id, item);
-                }
-            }
         }
         finally
         {

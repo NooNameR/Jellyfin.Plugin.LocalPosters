@@ -1,5 +1,4 @@
 ﻿using Jellyfin.Plugin.LocalPosters.Utils;
-using SkiaSharp;
 using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;

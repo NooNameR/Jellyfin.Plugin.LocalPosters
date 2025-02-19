@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 
 namespace Jellyfin.Plugin.LocalPosters.Matchers;

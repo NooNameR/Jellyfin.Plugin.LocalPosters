@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Utils;

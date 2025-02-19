@@ -13,9 +13,7 @@ public interface IMatcherFactory
     /// <summary>
     ///
     /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
-    bool IsSupported(BaseItem item);
+    HashSet<BaseItemKind> SupportedItemKinds { get; }
 
     /// <summary>
     ///
@@ -27,28 +25,41 @@ public interface IMatcherFactory
 /// <inheritdoc />
 public class MatcherFactory : IMatcherFactory
 {
-    static readonly Dictionary<Type, Func<BaseItem, IMatcher>> _factories = new()
+    static readonly Dictionary<BaseItemKind, Func<BaseItem, IMatcher>> _factories = new()
     {
-        { typeof(Movie), item => new MovieMatcher((Movie)item) },
-        { typeof(Season), item => new SeasonMatcher((Season)item) },
-        { typeof(Series), item => new SeriesMatcher((Series)item) },
-        { typeof(BoxSet), item => new MovieCollectionMatcher((BoxSet)item) }
+        { BaseItemKind.Movie, item => new MovieMatcher((Movie)item) },
+        { BaseItemKind.Season, item => new SeasonMatcher((Season)item) },
+        { BaseItemKind.Series, item => new SeriesMatcher((Series)item) },
+        { BaseItemKind.BoxSet, item => new MovieCollectionMatcher((BoxSet)item) }
     };
 
+    private static readonly HashSet<BaseItemKind> _kinds = [.._factories.Keys];
+
     /// <inheritdoc />
-    public bool IsSupported(BaseItem item)
-    {
-        ArgumentNullException.ThrowIfNull(item);
-        return _factories.ContainsKey(item.GetType());
-    }
+    public HashSet<BaseItemKind> SupportedItemKinds => _kinds;
 
     /// <inheritdoc />
     public IMatcher Create(BaseItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        if (!_factories.TryGetValue(item.GetType(), out var factory))
+        if (!_factories.TryGetValue(item.GetBaseItemKind(), out var factory))
             throw new InvalidOperationException($"No factory registered for type {item.GetType()}");
 
         return factory(item);
     }
+}
+
+/// <summary>
+///
+/// </summary>
+public static class MatcherFactoryExtensions
+{
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="factory"></param>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    public static bool IsSupported(this IMatcherFactory factory, BaseItem item) =>
+        factory.SupportedItemKinds.Contains(item.GetBaseItemKind());
 }
