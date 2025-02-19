@@ -18,7 +18,7 @@ namespace Jellyfin.Plugin.LocalPosters.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("LocalPosters/[controller]/[action]")]
+[Route("LocalPosters/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class UnmatchedAssetsController(
     IQueryable<PosterRecord> queryable,
@@ -32,7 +32,7 @@ public class UnmatchedAssetsController(
     ///
     /// </summary>
     /// <returns></returns>
-    [HttpGet]
+    [HttpGet("")]
     public async Task<ActionResult<IEnumerable<BaseItemDto>>> Get()
     {
         var dict = new Dictionary<Guid, BaseItem>();

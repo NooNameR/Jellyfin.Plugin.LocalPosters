@@ -5,7 +5,6 @@ using Google.Apis.Drive.v3;
 using Google.Apis.Util.Store;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.GDrive;
-using MediaBrowser.Controller;
 using MediaBrowser.Model.IO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,20 +20,13 @@ namespace Jellyfin.Plugin.LocalPosters.Controllers;
 [Route("LocalPosters/[controller]/[action]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class GoogleAuthorizationController(
-    IServerApplicationHost host,
     PluginConfiguration configuration,
     GDriveServiceProvider provider,
     IFileSystem fileSystem,
     IDataStore dataStore,
     ILogger<GoogleAuthorizationController> logger) : ControllerBase
 {
-    private string? RedirectUrl()
-    {
-        var url = host.GetSmartApiUrl(Request);
-        return string.IsNullOrEmpty(url)
-            ? Url.Action("Callback", "GoogleAuthorization", null, Request.Scheme)
-            : new Uri(new Uri(url), Url.Action("Callback", "GoogleAuthorization")).ToString();
-    }
+    private string? RedirectUrl() => Url.Action("Callback", "GoogleAuthorization", null, Request.Scheme);
 
     /// <summary>
     ///
