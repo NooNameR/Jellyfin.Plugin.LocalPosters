@@ -31,6 +31,8 @@ public sealed class GDriveSyncClient(
     /// </summary>
     public const string DownloadLimiterKey = "DownloadLimiterKey";
 
+    private const string FolderMimeType = "application/vnd.google-apps.folder";
+
     /// <inheritdoc />
     public async Task<long> SyncAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
@@ -52,18 +54,21 @@ public sealed class GDriveSyncClient(
 
                 var request = driveService.Files.List();
                 request.Q =
-                    $"'{q.Item1}' in parents and trashed=false and (mimeType contains 'image/' or mimeType='application/vnd.google-apps.folder')";
+                    $"'{q.Item1}' in parents and trashed=false and (mimeType contains 'image/' or mimeType='{FolderMimeType}')";
                 request.Fields = "nextPageToken, files(id, name, size, mimeType, modifiedTime)";
                 request.PageSize = 1000;
 
                 do
                 {
                     var result = await request.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                    logger.LogDebug("Discovered {NumFiles} (PageSize: {PageSize}) files in: {FolderId}", result.Files.Count,
+                        request.PageSize, q.Item1);
+
                     foreach (var file in result.Files)
                     {
                         var filePath = fileSystem.GetFileInfo(Path.Combine(folder.FullName, file.Name));
 
-                        if (file.MimeType == "application/vnd.google-apps.folder")
+                        if (file.MimeType == FolderMimeType)
                             queue.Enqueue((file.Id, filePath));
                         else if (ShouldDownload(filePath, file))
                             itemIds.Add((file.Id, filePath));
@@ -89,7 +94,18 @@ public sealed class GDriveSyncClient(
             await limiter.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
+                logger.LogDebug("Starting file: {FileId} download to: {Folder}", item.Item1, item.Item2.FullName);
+
                 await DownloadFile(logger, driveService, item.Item1, item.Item2, cancellationToken).ConfigureAwait(false);
+                logger.LogDebug("File: {FileId} download completed to: {Folder}", item.Item1, item.Item2.FullName);
+            }
+            catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
+            {
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning(e, "File: {FileId} download failed to: {Folder}", item.Item1, item.Item2.FullName);
+                throw;
             }
             finally
             {

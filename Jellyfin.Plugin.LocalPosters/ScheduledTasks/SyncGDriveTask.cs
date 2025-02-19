@@ -55,7 +55,8 @@ public class SyncGDriveTask(
 
                 tasks.Add(Task.Run(async () =>
                 {
-                    Interlocked.Add(ref totalItems, await syncClient.SyncAsync(itemProgress, cancellationToken).ConfigureAwait(false));
+                    var itemsCount = await syncClient.SyncAsync(itemProgress, cancellationToken).ConfigureAwait(false);
+                    Interlocked.Add(ref totalItems, itemsCount);
                 }, cancellationToken));
             }
 

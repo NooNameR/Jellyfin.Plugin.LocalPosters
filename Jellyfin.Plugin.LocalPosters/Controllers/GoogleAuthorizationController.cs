@@ -70,11 +70,19 @@ public class GoogleAuthorizationController(
     [HttpGet]
     public async Task<ActionResult<bool>> Verify()
     {
-        var driveService = await provider.Provide(HttpContext.RequestAborted).ConfigureAwait(false);
-        var request = driveService.Files.List();
-        request.PageSize = 1;
-        await request.ExecuteAsync(HttpContext.RequestAborted).ConfigureAwait(false);
-        return true;
+        try
+        {
+            var driveService = await provider.Provide(HttpContext.RequestAborted).ConfigureAwait(false);
+            var request = driveService.Files.List();
+            request.PageSize = 1;
+            await request.ExecuteAsync(HttpContext.RequestAborted).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception e)
+        {
+            logger.LogDebug(e, "Google API verification failed");
+            return false;
+        }
     }
 
     /// <summary>

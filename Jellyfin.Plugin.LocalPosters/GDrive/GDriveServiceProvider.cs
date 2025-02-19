@@ -45,6 +45,9 @@ public sealed class GDriveServiceProvider(
                 var clientSecretFile = fileSystem.GetFileInfo(configuration.GoogleClientSecretFile);
                 if (clientSecretFile.Exists)
                 {
+                    logger.LogDebug("Using token from: {GDriveTokenFolder} and {GoogleClientSecretFile} client secret file",
+                        plugin.GDriveTokenFolder, clientSecretFile.FullName);
+
                     var clientSecrets = await GoogleClientSecrets.FromFileAsync(clientSecretFile.FullName, cancellationToken)
                         .ConfigureAwait(false);
                     ArgumentNullException.ThrowIfNull(clientSecrets, nameof(clientSecrets));
@@ -55,7 +58,8 @@ public sealed class GDriveServiceProvider(
                         GDriveSyncClient.User, cancellationToken, dataStore).ConfigureAwait(false);
 
                     if (string.IsNullOrEmpty(credential.Token.RefreshToken))
-                        logger.LogWarning("Refresh token is missing. Please revoke access from Google API Dashboard and request a new token.");
+                        logger.LogWarning(
+                            "Refresh token is missing. Please revoke access from Google API Dashboard and request a new token.");
 
                     _driveService = new DriveService(new BaseClientService.Initializer
                     {
@@ -67,6 +71,9 @@ public sealed class GDriveServiceProvider(
             var saCredentialFile = fileSystem.GetFileInfo(configuration.GoogleSaCredentialFile);
             if (saCredentialFile.Exists)
             {
+                logger.LogDebug("Using Service Account credentials file: {GoogleSaCredentialFile}",
+                    saCredentialFile.FullName);
+
                 var credential = (await GoogleCredential.FromFileAsync(saCredentialFile.FullName, cancellationToken)
                         .ConfigureAwait(false))
                     .CreateScoped(_scopes);

@@ -159,10 +159,13 @@
         }).then(async function (response) {
             value = await response.json()
             isAuthorizedElement.checked = value
+
+            if (value === false) {
+                isAuthorizedElement.disabled = false;
+                isAuthorizedElement.addEventListener('change', authorize);
+            }
         }).catch(function () {
-            isAuthorizedElement.checked = false;
-            isAuthorizedElement.disabled = false;
-            isAuthorizedElement.addEventListener('change', authorize);
+            Dashboard.alert({message: "GDrive communication verification failed!"});
         });
 
         function loadFolders() {
