@@ -25,12 +25,15 @@ public class CleanupTask(
             var context = scope.ServiceProvider.GetRequiredService<Context>();
 
             var count = (double)await context.Set<PosterRecord>().AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
-            const double BatchSize = 1000;
+            const int BatchSize = 1000;
 
             var dbSet = context.Set<PosterRecord>();
             do
             {
-                var items = await dbSet.OrderBy(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false);
+                var items = await dbSet.OrderBy(x => x.Id)
+                    .Take(BatchSize)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 dbSet.RemoveRange(items);
                 count -= await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
