@@ -6,10 +6,10 @@ namespace Jellyfin.Plugin.LocalPosters.Matchers;
 /// <inheritdoc />
 public partial class SeasonMatcher : IMatcher
 {
-    private readonly string _seriesName;
-    private readonly int? _seriesProductionYear;
     private readonly string _seasonName;
     private readonly int? _seasonProductionYear;
+    private readonly string _seriesName;
+    private readonly int? _seriesProductionYear;
 
     /// <summary>
     ///
@@ -21,9 +21,9 @@ public partial class SeasonMatcher : IMatcher
     public SeasonMatcher(string seriesName, int? seriesProductionYear, string seasonName,
         int? seasonProductionYear)
     {
-        _seriesName = seriesName;
+        _seriesName = seriesName.SanitizeName();
+        _seasonName = seasonName.SanitizeName();
         _seriesProductionYear = seriesProductionYear;
-        _seasonName = seasonName;
         _seasonProductionYear = seasonProductionYear;
     }
 
@@ -44,8 +44,8 @@ public partial class SeasonMatcher : IMatcher
 
         if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
         return (year == _seasonProductionYear || year == _seriesProductionYear) &&
-               _seriesName.EqualsSanitizing(match.Groups[1].Value) &&
-               string.Equals(match.Groups[3].Value, _seasonName, StringComparison.OrdinalIgnoreCase);
+               string.Equals(_seriesName, match.Groups[1].Value.SanitizeName(), StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(match.Groups[3].Value.SanitizeName(), _seasonName, StringComparison.OrdinalIgnoreCase);
     }
 
     [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*-\s*(Season \d+)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]

@@ -14,7 +14,7 @@ public partial class MovieCollectionMatcher : IMatcher
     /// <param name="name"></param>
     public MovieCollectionMatcher(string name)
     {
-        _name = name;
+        _name = name.SanitizeName();
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public partial class MovieCollectionMatcher : IMatcher
     public bool IsMatch(string fileName)
     {
         var match = CollectionRegex().Match(fileName);
-        return match.Success && _name.EqualsSanitizing(match.Groups[1].Value);
+        return match.Success && string.Equals(_name, match.Groups[1].Value.SanitizeName(), StringComparison.OrdinalIgnoreCase);
     }
 
     [GeneratedRegex(@"^(.*? Collection)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]

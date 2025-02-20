@@ -16,7 +16,7 @@ public partial class SeriesMatcher : IMatcher
     /// <param name="productionYear"></param>
     public SeriesMatcher(string name, int? productionYear)
     {
-        _name = name;
+        _name = name.SanitizeName();
         _productionYear = productionYear;
     }
 
@@ -36,7 +36,7 @@ public partial class SeriesMatcher : IMatcher
 
         if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
         return (year == _productionYear) &&
-               _name.EqualsSanitizing(match.Groups[1].Value);
+               string.Equals(_name, match.Groups[1].Value.SanitizeName(), StringComparison.OrdinalIgnoreCase);
     }
 
     [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]
