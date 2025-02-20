@@ -47,7 +47,7 @@ To enable GDrive integration with `./auth/drive.file` scope:
 4. **Create OAuth 2.0 Credentials:**
     - Under **APIs & Services > Credentials**, create **OAuth client ID**.
     - Configure consent screen (**External**, add app name, save).
-    - Set **Authorized Redirect URI**: `{YOUR_JELLYFIN_ADDRESS}/LocalPosters/GoogleAuthorization/Callback`. NOTE: if you are using different addresses for local and external network you have to add both addresses. By default, app is going to read [Networking](https://jellyfin.org/docs/general/networking/) settings to find base address, otherwise "current" browser address will be used
+    - Set **Authorized Redirect URI**: `{YOUR_JELLYFIN_ADDRESS}/LocalPosters/GoogleAuthorization/Callback`. NOTE: if you are using different addresses for local and external network you have to add both addresses. Make sure you initiate authorization from the whitelisted base address
     - Select **Web application**, download `client_secrets.json`.
 5. **Set Scopes:** Add `https://www.googleapis.com/auth/drive.file`.
 6. **Publish Application:** Publish the OAuth consent screen for external access. Please note if you use "Test Audience" refresh token will expire withing 7 days, with current scope application won't require "Verification"
