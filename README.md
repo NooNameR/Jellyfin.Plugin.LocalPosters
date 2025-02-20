@@ -57,7 +57,9 @@ Once configuration is done, plugin will keep syncing folders and searching for m
 
 ## Support
 
-If you encounter any issues or have questions about the plugin, please open an issue in the [GitHub Issues](https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/issues) section of the repository.
+If you encounter any issues or have questions about the plugin, please open an [issue](https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/issues) in the GitHub Issues section of the repository.
+
+While GitHub issues are the preferred way to report a bug, feel free to join the discussion on [Trash Discord](https://discord.com/channels/492590071455940612/1342175843069329448).
 
 ## License
 
