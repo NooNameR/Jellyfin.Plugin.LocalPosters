@@ -45,7 +45,7 @@ public class GoogleAuthorizationController(
 
         using var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
-            ClientSecrets = clientSecrets.Secrets, Scopes = [DriveService.Scope.Drive], DataStore = dataStore
+            ClientSecrets = clientSecrets.Secrets, Scopes = [DriveService.Scope.Drive], DataStore = dataStore, Prompt = "consent"
         });
 
         var redirectUrl = RedirectUrl();
