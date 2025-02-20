@@ -18,6 +18,18 @@ public class MovieMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithOddCharacters()
+    {
+        const int MovieYear = 2019;
+        const int PremiereYear = 2019;
+        const string MovieName = "Pokémon Detective Pikachu (2019)";
+
+        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+
+        Assert.True(matcher.IsMatch("Pokemon detective pikachu (2019).jpg"));
+    }
+
+    [Fact]
     public void MatchSuccessfullyOnPremiere()
     {
         const int MovieYear = 2016;
