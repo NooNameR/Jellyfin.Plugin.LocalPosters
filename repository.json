@@ -8,6 +8,14 @@
     "owner": "jellyfin",
     "versions": [
       {
+        "changelog": "## What's Changed\r\n* ci(deps): bump Kevinjil/jellyfin-plugin-repo-action from 0.4.1 to 0.4.2 by @dependabot in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/11\r\n\r\n## New Contributors\r\n* @dependabot made their first contribution in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/11\r\n\r\n**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.7.4...0.0.7.5",
+        "checksum": "efce7625c7680ec9ec540db212a57800",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.7.5/local-posters_0.0.7.5.zip",
+        "targetAbi": "10.10.6.0",
+        "timestamp": "2025-02-21T09:40:46Z",
+        "version": "0.0.7.5"
+      },
+      {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.7.3...0.0.7.4",
         "checksum": "8406f313fecd72c80ce09f3dff5b22dc",
         "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.7.4/local-posters_0.0.7.4.zip",
