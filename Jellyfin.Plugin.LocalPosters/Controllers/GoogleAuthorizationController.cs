@@ -35,7 +35,7 @@ public class GoogleAuthorizationController(
     [HttpPost]
     public async Task<ActionResult<string>> Authorize()
     {
-        var clientSecretFile = fileSystem.GetFileInfo(configuration.GoogleClientSecretFile);
+        var clientSecretFile = configuration.GoogleClientSecretFile(fileSystem);
         if (!clientSecretFile.Exists)
             return BadRequest("Client secret file does not exist");
 
@@ -87,7 +87,7 @@ public class GoogleAuthorizationController(
     [Produces(MediaTypeNames.Text.Html)]
     public async Task<IActionResult> Callback([FromQuery] string code)
     {
-        var clientSecretFile = fileSystem.GetFileInfo(configuration.GoogleClientSecretFile);
+        var clientSecretFile = configuration.GoogleClientSecretFile(fileSystem);
         var clientSecrets = await GoogleClientSecrets.FromFileAsync(clientSecretFile.FullName, CancellationToken.None)
             .ConfigureAwait(false);
 

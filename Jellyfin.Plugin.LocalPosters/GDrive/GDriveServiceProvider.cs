@@ -20,9 +20,16 @@ public sealed class GDriveServiceProvider(
     ILogger<GDriveServiceProvider> logger)
     : IDisposable
 {
+    private static readonly HashSet<string> _scopes = [DriveService.Scope.DriveReadonly];
     private readonly SemaphoreSlim _lock = new(1);
     private DriveService? _driveService;
-    private static readonly HashSet<string> _scopes = [DriveService.Scope.DriveReadonly];
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _lock.Dispose();
+        _driveService?.Dispose();
+    }
 
     /// <summary>
     ///
@@ -42,7 +49,7 @@ public sealed class GDriveServiceProvider(
 
             if (fileSystem.GetFiles(plugin.GDriveTokenFolder).Any())
             {
-                var clientSecretFile = fileSystem.GetFileInfo(configuration.GoogleClientSecretFile);
+                var clientSecretFile = configuration.GoogleClientSecretFile(fileSystem);
                 if (clientSecretFile.Exists)
                 {
                     logger.LogDebug("Using token from: {GDriveTokenFolder} and {GoogleClientSecretFile} client secret file",
@@ -68,7 +75,7 @@ public sealed class GDriveServiceProvider(
                 }
             }
 
-            var saCredentialFile = fileSystem.GetFileInfo(configuration.GoogleSaCredentialFile);
+            var saCredentialFile = configuration.GoogleSaCredentialFile(fileSystem);
             if (saCredentialFile.Exists)
             {
                 logger.LogDebug("Using Service Account credentials file: {GoogleSaCredentialFile}",
@@ -90,12 +97,5 @@ public sealed class GDriveServiceProvider(
         {
             _lock.Release();
         }
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _lock.Dispose();
-        _driveService?.Dispose();
     }
 }

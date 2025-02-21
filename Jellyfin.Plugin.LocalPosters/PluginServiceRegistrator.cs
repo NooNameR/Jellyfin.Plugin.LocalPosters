@@ -73,6 +73,9 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
             if (!folder.IsRemote)
                 continue;
 
+            if (string.IsNullOrEmpty(folder.LocalPath))
+                continue;
+
             yield return new GDriveSyncClient(loggerFactory.CreateLogger($"{nameof(GDriveSyncClient)}[{folder.RemoteId}]"),
                 driveServiceProvider, folder.RemoteId,
                 folder.LocalPath,

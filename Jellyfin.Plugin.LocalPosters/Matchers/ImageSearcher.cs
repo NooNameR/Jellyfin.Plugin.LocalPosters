@@ -43,6 +43,9 @@ public class ImageSearcher : IImageSearcher
         var matcher = _matcherFactory.Create(item);
         for (var i = 0; i < _configuration.Folders.Length; i++)
         {
+            if (string.IsNullOrEmpty(_configuration.Folders[i].LocalPath))
+                continue;
+
             foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i].LocalPath))
             {
                 cancellationToken.ThrowIfCancellationRequested();

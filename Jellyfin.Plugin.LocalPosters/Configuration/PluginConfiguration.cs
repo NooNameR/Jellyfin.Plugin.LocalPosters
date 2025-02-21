@@ -19,15 +19,6 @@ public class PluginConfiguration : BasePluginConfiguration
     public FolderItem[] Folders { get; set; } = _cache.Value;
 #pragma warning restore CA1819
 
-    static FolderItem[] ReadJson()
-    {
-        var type = typeof(PluginConfiguration);
-        using Stream? stream = type.Assembly.GetManifestResourceStream(string.Format(CultureInfo.InvariantCulture,
-            "{0}.Configuration.gdrives.json", type));
-        if (stream == null) return [];
-        return JsonSerializer.Deserialize<FolderItem[]>(stream) ?? [];
-    }
-
     /// <summary>
     ///
     /// </summary>
@@ -62,6 +53,15 @@ public class PluginConfiguration : BasePluginConfiguration
     ///
     /// </summary>
     public SKColor? SkColor => !string.IsNullOrEmpty(BorderColor) && SKColor.TryParse(BorderColor, out var c) ? c : null;
+
+    static FolderItem[] ReadJson()
+    {
+        var type = typeof(PluginConfiguration);
+        using Stream? stream = type.Assembly.GetManifestResourceStream(string.Format(CultureInfo.InvariantCulture,
+            "{0}.Configuration.gdrives.json", type));
+        if (stream == null) return [];
+        return JsonSerializer.Deserialize<FolderItem[]>(stream) ?? [];
+    }
 }
 
 /// <summary>

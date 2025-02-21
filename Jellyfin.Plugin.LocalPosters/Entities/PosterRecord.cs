@@ -60,6 +60,9 @@ public class PosterRecord
     /// <param name="now"></param>
     public void SetPosterFile(FileSystemMetadata path, DateTimeOffset now)
     {
+        if (!path.Exists)
+            throw new FileNotFoundException("File does not exist", path.FullName);
+
         MatchedAt = now;
         _posterPath = path.FullName;
     }

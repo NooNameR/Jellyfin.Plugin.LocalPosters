@@ -193,6 +193,12 @@
         function addFolder() {
             var gDriveInput = $('#newGDrive').val().trim();
             var folderInput = $('#newFolder').val().trim();
+
+            if (!folderInput) {
+                Dashboard.alert({message: "Folder path cannot be empty!"});
+                return;
+            }
+
             if (folderInput && !config.Folders.some(x => x.RemoteId === gDriveInput || x.LocalPath === folderInput)) {
                 config.Folders.push({RemoteId: gDriveInput, LocalPath: folderInput});
                 $('#newFolder').val('');
