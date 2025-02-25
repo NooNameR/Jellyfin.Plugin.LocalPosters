@@ -1,3 +1,4 @@
+using System.Drawing;
 using SkiaSharp;
 
 namespace Jellyfin.Plugin.LocalPosters.Utils;
@@ -7,7 +8,7 @@ using static File;
 /// <summary>
 ///
 /// </summary>
-public class SkiaDefaultBorderReplacer : IBorderReplacer
+public class SkiaDefaultBorderReplacer(Size size) : IBorderReplacer
 {
     /// <inheritdoc />
     public Stream Replace(string source)
@@ -15,10 +16,9 @@ public class SkiaDefaultBorderReplacer : IBorderReplacer
         using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);
 
-        // Resize to 1000x1500
-        using var resizedImage = new SKBitmap(1000, 1500);
+        using var resizedImage = new SKBitmap(size.Width, size.Height);
         using var canvas = new SKCanvas(resizedImage);
-        canvas.DrawBitmap(bitmap, new SKRect(0, 0, 1000, 1500));
+        canvas.DrawBitmap(bitmap, new SKRect(0, 0, resizedImage.Width, resizedImage.Height));
 
         // Use MemoryStream to store the result
         var memoryStream = new MemoryStream();

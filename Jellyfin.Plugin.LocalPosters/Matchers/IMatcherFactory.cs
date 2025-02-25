@@ -30,6 +30,7 @@ public class MatcherFactory : IMatcherFactory
         { BaseItemKind.Movie, item => new MovieMatcher((Movie)item) },
         { BaseItemKind.Season, item => new SeasonMatcher((Season)item) },
         { BaseItemKind.Series, item => new SeriesMatcher((Series)item) },
+        { BaseItemKind.Episode, item => new EpisodeMatcher((Episode)item) },
         { BaseItemKind.BoxSet, item => new MovieCollectionMatcher((BoxSet)item) }
     };
 

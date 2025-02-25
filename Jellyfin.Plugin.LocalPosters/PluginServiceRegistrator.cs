@@ -41,10 +41,10 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
             new CachedImageSearcher(provider.GetRequiredService<ImageSearcher>(), provider.GetRequiredService<IMemoryCache>(),
                 provider.GetRequiredService<IFileSystem>(), provider.GetRequiredService<LocalPostersPlugin>()));
         serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
-        serviceCollection.AddScoped(CreateBorderReplacer);
         serviceCollection.AddSingleton<IDataStore>(provider =>
             new FileDataStore(provider.GetRequiredService<LocalPostersPlugin>().GDriveTokenFolder, true));
         serviceCollection.AddScoped(CreateSyncClients);
+        serviceCollection.AddScoped<BorderReplacerProvider>();
         serviceCollection.AddScoped<GDriveServiceProvider>();
         serviceCollection.AddKeyedScoped(GDriveSyncClient.DownloadLimiterKey, GetGDriveDownloadLimiter);
         serviceCollection.AddKeyedSingleton(Constants.ScheduledTaskLockKey, new SemaphoreSlim(1));
@@ -91,20 +91,5 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     static IQueryable<T> GetQueryable<T>(IServiceProvider provider) where T : class
     {
         return provider.GetRequiredService<Context>().Set<T>().AsNoTracking();
-    }
-
-    static IBorderReplacer CreateBorderReplacer(IServiceProvider provider)
-    {
-        var pluginConfiguration = provider.GetRequiredService<PluginConfiguration>();
-        if (!pluginConfiguration.EnableBorderReplacer)
-            return new SkiaDefaultBorderReplacer();
-
-        if (pluginConfiguration.RemoveBorder || !pluginConfiguration.SkColor.HasValue)
-            return new SkiaSharpBorderRemover();
-
-        if (pluginConfiguration.SkColor.HasValue)
-            return new SkiaSharpBorderReplacer(pluginConfiguration.SkColor.Value);
-
-        return new SkiaDefaultBorderReplacer();
     }
 }
