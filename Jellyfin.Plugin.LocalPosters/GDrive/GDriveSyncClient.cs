@@ -19,16 +19,6 @@ public sealed class GDriveSyncClient(
     /// <summary>
     ///
     /// </summary>
-    public const string ApplicationName = "Jellyfin.Plugin.LocalPosters";
-
-    /// <summary>
-    ///
-    /// </summary>
-    public const string User = "local-posters-user";
-
-    /// <summary>
-    ///
-    /// </summary>
     public const string DownloadLimiterKey = "DownloadLimiterKey";
 
     private const string FolderMimeType = "application/vnd.google-apps.folder";

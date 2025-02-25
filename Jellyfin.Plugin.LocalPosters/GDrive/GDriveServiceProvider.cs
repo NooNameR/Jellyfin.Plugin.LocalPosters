@@ -20,7 +20,10 @@ public sealed class GDriveServiceProvider(
     ILogger<GDriveServiceProvider> logger)
     : IDisposable
 {
-    private static readonly HashSet<string> _scopes = [DriveService.Scope.DriveReadonly];
+    public const string User = "local-posters-user";
+
+    private const string ApplicationName = "Jellyfin.Plugin.LocalPosters";
+    public static readonly HashSet<string> Scopes = [DriveService.Scope.DriveReadonly];
     private readonly SemaphoreSlim _lock = new(1);
     private DriveService? _driveService;
 
@@ -60,9 +63,7 @@ public sealed class GDriveServiceProvider(
                     ArgumentNullException.ThrowIfNull(clientSecrets, nameof(clientSecrets));
 
                     var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                        clientSecrets.Secrets,
-                        _scopes,
-                        GDriveSyncClient.User, cancellationToken, dataStore).ConfigureAwait(false);
+                        clientSecrets.Secrets, Scopes, User, cancellationToken, dataStore).ConfigureAwait(false);
 
                     if (string.IsNullOrEmpty(credential.Token.RefreshToken))
                         logger.LogWarning(
@@ -70,7 +71,7 @@ public sealed class GDriveServiceProvider(
 
                     _driveService = new DriveService(new BaseClientService.Initializer
                     {
-                        HttpClientInitializer = credential, ApplicationName = GDriveSyncClient.ApplicationName
+                        HttpClientInitializer = credential, ApplicationName = ApplicationName
                     });
                 }
             }
@@ -83,11 +84,11 @@ public sealed class GDriveServiceProvider(
 
                 var credential = (await GoogleCredential.FromFileAsync(saCredentialFile.FullName, cancellationToken)
                         .ConfigureAwait(false))
-                    .CreateScoped(_scopes);
+                    .CreateScoped(Scopes);
 
                 _driveService = new DriveService(new BaseClientService.Initializer
                 {
-                    HttpClientInitializer = credential, ApplicationName = GDriveSyncClient.ApplicationName
+                    HttpClientInitializer = credential, ApplicationName = ApplicationName
                 });
             }
 

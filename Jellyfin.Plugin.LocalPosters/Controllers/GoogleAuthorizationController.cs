@@ -1,7 +1,6 @@
 using System.Net.Mime;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
-using Google.Apis.Drive.v3;
 using Google.Apis.Util.Store;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.GDrive;
@@ -37,7 +36,10 @@ public class GoogleAuthorizationController(
     {
         var clientSecretFile = configuration.GoogleClientSecretFile(fileSystem);
         if (!clientSecretFile.Exists)
+        {
+            logger.LogWarning("Google client secret file: {FilePath} not found", configuration.GoogleClientSecretFile);
             return BadRequest("Client secret file does not exist");
+        }
 
         var clientSecrets = await GoogleClientSecrets.FromFileAsync(clientSecretFile.FullName, HttpContext.RequestAborted)
             .ConfigureAwait(false);
@@ -45,7 +47,7 @@ public class GoogleAuthorizationController(
 
         using var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
-            ClientSecrets = clientSecrets.Secrets, Scopes = [DriveService.Scope.Drive], DataStore = dataStore, Prompt = "consent"
+            ClientSecrets = clientSecrets.Secrets, Scopes = GDriveServiceProvider.Scopes, DataStore = dataStore, Prompt = "consent"
         });
 
         var redirectUrl = RedirectUrl();
@@ -95,10 +97,10 @@ public class GoogleAuthorizationController(
 
         using var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
-            ClientSecrets = clientSecrets.Secrets, Scopes = [DriveService.Scope.Drive], DataStore = dataStore
+            ClientSecrets = clientSecrets.Secrets, Scopes = GDriveServiceProvider.Scopes, DataStore = dataStore
         });
 
-        await flow.ExchangeCodeForTokenAsync(GDriveSyncClient.User, code, RedirectUrl(), CancellationToken.None)
+        await flow.ExchangeCodeForTokenAsync(GDriveServiceProvider.User, code, RedirectUrl(), CancellationToken.None)
             .ConfigureAwait(false);
 
         const string Html = """
