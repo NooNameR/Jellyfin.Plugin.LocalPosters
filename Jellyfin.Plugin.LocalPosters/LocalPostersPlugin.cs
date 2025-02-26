@@ -2,6 +2,7 @@ using System.Globalization;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -16,16 +17,17 @@ namespace Jellyfin.Plugin.LocalPosters;
 public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages, IDisposable
 #pragma warning restore IDISP025
 {
-    private readonly object _lock = new();
-    private CancellationTokenSource? _cancellationTokenSource;
-
     /// <summary>
     /// Gets the provider name.
     /// </summary>
     public const string ProviderName = "Local Posters";
 
+    private readonly object _lock = new();
+    private CancellationTokenSource? _cancellationTokenSource;
+
     /// <inheritdoc />
-    public LocalPostersPlugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILoggerFactory loggerFactory) : base(
+    public LocalPostersPlugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILoggerFactory loggerFactory,
+        ILibraryManager manager) : base(
         applicationPaths,
         xmlSerializer)
     {
@@ -52,6 +54,7 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages,
         try
         {
             context.ApplyMigration();
+            context.FixData(manager);
         }
         catch (Exception e)
         {
@@ -99,6 +102,12 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages,
     public string DbPath { get; }
 
     /// <inheritdoc />
+    public void Dispose()
+    {
+        ResetToken();
+    }
+
+    /// <inheritdoc />
     public IEnumerable<PluginPageInfo> GetPages()
     {
         return
@@ -123,11 +132,5 @@ public class LocalPostersPlugin : BasePlugin<PluginConfiguration>, IHasWebPages,
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
         }
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        ResetToken();
     }
 }

@@ -63,7 +63,7 @@ public class LocalImageProvider(
         var now = timeProvider.GetLocalNow();
         if (record == null)
         {
-            record = new PosterRecord(item.Id, now, file);
+            record = new PosterRecord(item, type, now, file);
             record.SetPosterFile(file, now);
             await dbSet.AddAsync(record, cancellationToken);
         }
