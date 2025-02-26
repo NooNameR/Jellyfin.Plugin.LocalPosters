@@ -122,10 +122,10 @@ public static class LoggerExtensions
                 _missingSeriesMessage(logger, series.Name, series.ProductionYear, null);
                 break;
             case Season season:
-                _missingSeasonMessage(logger, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear, season.Name, null);
+                _missingSeasonMessage(logger, season.Series.Name, season.Series.ProductionYear ?? season.ProductionYear, season.Name, null);
                 break;
             case Episode episode:
-                _missingEpisodeMessage(logger, episode.SeriesName, episode.Series.ProductionYear ?? episode.ProductionYear,
+                _missingEpisodeMessage(logger, episode.Series.Name, episode.Series.ProductionYear ?? episode.ProductionYear,
                     episode.SeasonName, episode.IndexNumber, episode.Name,
                     null);
                 break;

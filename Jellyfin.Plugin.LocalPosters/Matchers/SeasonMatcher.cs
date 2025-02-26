@@ -31,7 +31,7 @@ public partial class SeasonMatcher : IMatcher
     ///
     /// </summary>
     /// <param name="season"></param>
-    public SeasonMatcher(Season season) : this(season.SeriesName, season.Series.ProductionYear, season.Name,
+    public SeasonMatcher(Season season) : this(season.Series.Name ?? string.Empty, season.Series.ProductionYear, season.Name,
         season.ProductionYear)
     {
     }
@@ -39,6 +39,9 @@ public partial class SeasonMatcher : IMatcher
     /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
+        if (string.IsNullOrEmpty(_seasonName))
+            return false;
+
         var match = SeasonRegex().Match(fileName);
         if (!match.Success) return false;
 

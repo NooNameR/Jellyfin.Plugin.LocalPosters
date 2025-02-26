@@ -15,7 +15,7 @@ public class Context : DbContext
     /// <summary>
     ///
     /// </summary>
-    public static readonly string DbName = "local-posters.db";
+    public const string DbName = "local-posters.db";
 
     /// <summary>
     ///

@@ -37,7 +37,8 @@ public partial class EpisodeMatcher : IMatcher
     ///
     /// </summary>
     /// <param name="episode"></param>
-    public EpisodeMatcher(Episode episode) : this(episode.SeriesName, episode.Series.ProductionYear, episode.Season.IndexNumber,
+    public EpisodeMatcher(Episode episode) : this(episode.Series.Name ?? string.Empty, episode.Series.ProductionYear,
+        episode.Season.IndexNumber,
         episode.Season.ProductionYear,
         episode.IndexNumber,
         episode.ProductionYear)
@@ -47,6 +48,9 @@ public partial class EpisodeMatcher : IMatcher
     /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
+        if (string.IsNullOrEmpty(_seriesName))
+            return false;
+
         var match = EpisodeRegex().Match(fileName);
         if (!match.Success) return false;
 

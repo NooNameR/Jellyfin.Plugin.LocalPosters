@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.LocalPosters.Providers;
 
+using static File;
+
 /// <summary>
 ///
 /// </summary>
@@ -75,12 +77,15 @@ public class LocalImageProvider(
 
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        var borderReplacerProvider = serviceScope.ServiceProvider.GetRequiredService<BorderReplacerProvider>();
-        var borderReplacer = borderReplacerProvider.Provide(item.GetBaseItemKind(), type);
+        await using var stream = OpenRead(file.FullName);
+        var imageProcessor = serviceScope.ServiceProvider.GetRequiredService<IImageProcessor>();
 
         return new DynamicImageResponse
         {
-            Stream = borderReplacer.Replace(file.FullName), HasImage = true, Format = ImageFormat.Jpg, Protocol = MediaProtocol.File
+            Stream = imageProcessor.Process(item.GetBaseItemKind(), type, stream),
+            HasImage = true,
+            Format = ImageFormat.Jpg,
+            Protocol = MediaProtocol.File
         };
     }
 

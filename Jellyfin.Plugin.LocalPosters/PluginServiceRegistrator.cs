@@ -37,14 +37,15 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddScoped(GetDbSet<PosterRecord>);
         serviceCollection.AddScoped(GetQueryable<PosterRecord>);
         serviceCollection.AddScoped<ImageSearcher>();
+        serviceCollection.AddSingleton<ImageSizeProvider>();
         serviceCollection.AddScoped<IImageSearcher>(provider =>
             new CachedImageSearcher(provider.GetRequiredService<ImageSearcher>(), provider.GetRequiredService<IMemoryCache>(),
                 provider.GetRequiredService<IFileSystem>(), provider.GetRequiredService<LocalPostersPlugin>()));
         serviceCollection.AddScoped<PluginConfiguration>(p => p.GetRequiredService<LocalPostersPlugin>().Configuration);
+        serviceCollection.AddScoped(CreateBorderReplacer);
         serviceCollection.AddSingleton<IDataStore>(provider =>
             new FileDataStore(provider.GetRequiredService<LocalPostersPlugin>().GDriveTokenFolder, true));
         serviceCollection.AddScoped(CreateSyncClients);
-        serviceCollection.AddScoped<BorderReplacerProvider>();
         serviceCollection.AddScoped<GDriveServiceProvider>();
         serviceCollection.AddKeyedScoped(GDriveSyncClient.DownloadLimiterKey, GetGDriveDownloadLimiter);
         serviceCollection.AddKeyedSingleton(Constants.ScheduledTaskLockKey, new SemaphoreSlim(1));
@@ -91,5 +92,21 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     static IQueryable<T> GetQueryable<T>(IServiceProvider provider) where T : class
     {
         return provider.GetRequiredService<Context>().Set<T>().AsNoTracking();
+    }
+
+    static IImageProcessor CreateBorderReplacer(IServiceProvider provider)
+    {
+        var pluginConfiguration = provider.GetRequiredService<PluginConfiguration>();
+        var resizer = new SkiaImageResizer(provider.GetRequiredService<ImageSizeProvider>());
+        if (!pluginConfiguration.EnableBorderReplacer)
+            return resizer;
+
+        if (pluginConfiguration.RemoveBorder || !pluginConfiguration.SkColor.HasValue)
+            return new SkiaSharpBorderRemover(resizer);
+
+        if (pluginConfiguration.SkColor.HasValue)
+            return new SkiaSharpImageProcessor(pluginConfiguration.SkColor.Value, resizer);
+
+        return resizer;
     }
 }
