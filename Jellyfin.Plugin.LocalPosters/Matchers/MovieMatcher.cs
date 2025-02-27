@@ -51,6 +51,6 @@ public partial class MovieMatcher : IMatcher
         return split.Length > 1 && string.Equals(split[0], fileName, StringComparison.OrdinalIgnoreCase);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex MovieRegex();
 }

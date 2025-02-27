@@ -1,17 +1,17 @@
+using Jellyfin.Data.Enums;
+using MediaBrowser.Model.Entities;
 using SkiaSharp;
-using static System.IO.File;
 
 namespace Jellyfin.Plugin.LocalPosters.Utils;
 
 /// <summary>
 ///
 /// </summary>
-public class SkiaSharpBorderReplacer(SKColor color) : IBorderReplacer
+public class SkiaSharpImageProcessor(SKColor color, IImageProcessor next) : IImageProcessor
 {
     /// <inheritdoc />
-    public Stream Replace(string source)
+    public Stream Process(BaseItemKind kind, ImageType imageType, Stream stream)
     {
-        using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);
         int width = bitmap.Width;
         int height = bitmap.Height;
@@ -32,21 +32,12 @@ public class SkiaSharpBorderReplacer(SKColor color) : IBorderReplacer
         {
             canvas.Clear(color); // Fill background with custom color
             canvas.DrawBitmap(cropped, new SKPoint(25, 25)); // Paste cropped image
-        }
 
-        // Resize to 1000x1500
-        using var resizedImage = new SKBitmap(1000, 1500);
-        using (var canvas = new SKCanvas(resizedImage))
-        {
-            canvas.DrawBitmap(newImage, new SKRect(0, 0, 1000, 1500));
-
-            // Use MemoryStream to store the result
-            var memoryStream = new MemoryStream();
-            resizedImage.Encode(memoryStream, SKEncodedImageFormat.Jpeg, 100);
-
+            using var memoryStream = new MemoryStream();
+            newImage.Encode(memoryStream, SKEncodedImageFormat.Jpeg, 100);
             // Reset the memory stream position to the start before returning
             memoryStream.Seek(0, SeekOrigin.Begin);
-            return memoryStream;
+            return next.Process(kind, imageType, memoryStream);
         }
     }
 }

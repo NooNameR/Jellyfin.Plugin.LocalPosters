@@ -1,24 +1,23 @@
+using Jellyfin.Data.Enums;
+using MediaBrowser.Model.Entities;
 using SkiaSharp;
 
 namespace Jellyfin.Plugin.LocalPosters.Utils;
 
-using static File;
-
 /// <summary>
 ///
 /// </summary>
-public class SkiaDefaultBorderReplacer : IBorderReplacer
+public class SkiaImageResizer(ImageSizeProvider sizeProvider) : IImageProcessor
 {
     /// <inheritdoc />
-    public Stream Replace(string source)
+    public Stream Process(BaseItemKind kind, ImageType imageType, Stream stream)
     {
-        using var stream = OpenRead(source);
         using var bitmap = SKBitmap.Decode(stream);
 
-        // Resize to 1000x1500
-        using var resizedImage = new SKBitmap(1000, 1500);
+        var size = sizeProvider.GetImageSize(kind, imageType);
+        using var resizedImage = new SKBitmap(size.Width, size.Height);
         using var canvas = new SKCanvas(resizedImage);
-        canvas.DrawBitmap(bitmap, new SKRect(0, 0, 1000, 1500));
+        canvas.DrawBitmap(bitmap, new SKRect(0, 0, resizedImage.Width, resizedImage.Height));
 
         // Use MemoryStream to store the result
         var memoryStream = new MemoryStream();

@@ -31,7 +31,7 @@ public partial class SeasonMatcher : IMatcher
     ///
     /// </summary>
     /// <param name="season"></param>
-    public SeasonMatcher(Season season) : this(season.SeriesName, season.Series.ProductionYear, season.Name,
+    public SeasonMatcher(Season season) : this(season.Series.Name ?? string.Empty, season.Series.ProductionYear, season.Name,
         season.ProductionYear)
     {
     }
@@ -39,6 +39,9 @@ public partial class SeasonMatcher : IMatcher
     /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
+        if (string.IsNullOrEmpty(_seasonName))
+            return false;
+
         var match = SeasonRegex().Match(fileName);
         if (!match.Success) return false;
 
@@ -48,6 +51,6 @@ public partial class SeasonMatcher : IMatcher
                string.Equals(match.Groups[3].Value.SanitizeName(), _seasonName, StringComparison.OrdinalIgnoreCase);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*-\s*(Season \d+)(\.[a-z]+)?$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*-\s*(Season \d+)(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex SeasonRegex();
 }

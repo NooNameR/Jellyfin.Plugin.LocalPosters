@@ -1,18 +1,24 @@
-﻿using Jellyfin.Plugin.LocalPosters.Utils;
+﻿using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.LocalPosters.Utils;
+using MediaBrowser.Model.Entities;
 using SkiaSharp;
 using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
-public class SkiaSharpBorderReplacerTests
+public class SkiaSharpImageProcessorTests
 {
+    private readonly SkiaSharpImageProcessor _imageProcessor;
+    private readonly ImageType _imageType;
+    private readonly BaseItemKind _kind;
     private readonly FileInfo _source;
-    private readonly SkiaSharpBorderReplacer _borderReplacer;
 
-    public SkiaSharpBorderReplacerTests()
+    public SkiaSharpImageProcessorTests()
     {
+        _kind = BaseItemKind.Movie;
+        _imageType = ImageType.Primary;
         _source = new FileInfo("abc.jpg");
-        _borderReplacer = new SkiaSharpBorderReplacer(SKColors.SkyBlue);
+        _imageProcessor = new SkiaSharpImageProcessor(SKColors.SkyBlue, NoopImageProcessor.Instance);
     }
 
     [Fact]
@@ -26,7 +32,8 @@ public class SkiaSharpBorderReplacerTests
         var target = new FileInfo(_source.FullName.Replace(_source.Extension, "", StringComparison.OrdinalIgnoreCase) + "_border_replaced" +
                                   _source.Extension);
 
-        using var image = _borderReplacer.Replace(_source.FullName);
+        using var stream = File.OpenRead(_source.FullName);
+        using var image = _imageProcessor.Process(_kind, _imageType, stream);
         using var fileStream = new FileStream(target.FullName, FileMode.Create, FileAccess.Write);
         image.CopyTo(fileStream);
     }

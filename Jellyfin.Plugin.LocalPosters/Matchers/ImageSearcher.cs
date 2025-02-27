@@ -46,7 +46,7 @@ public class ImageSearcher : IImageSearcher
             if (string.IsNullOrEmpty(_configuration.Folders[i].LocalPath))
                 continue;
 
-            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i].LocalPath))
+            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i].LocalPath, true))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 

@@ -37,6 +37,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddScoped(GetDbSet<PosterRecord>);
         serviceCollection.AddScoped(GetQueryable<PosterRecord>);
         serviceCollection.AddScoped<ImageSearcher>();
+        serviceCollection.AddSingleton<ImageSizeProvider>();
         serviceCollection.AddScoped<IImageSearcher>(provider =>
             new CachedImageSearcher(provider.GetRequiredService<ImageSearcher>(), provider.GetRequiredService<IMemoryCache>(),
                 provider.GetRequiredService<IFileSystem>(), provider.GetRequiredService<LocalPostersPlugin>()));
@@ -93,18 +94,19 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         return provider.GetRequiredService<Context>().Set<T>().AsNoTracking();
     }
 
-    static IBorderReplacer CreateBorderReplacer(IServiceProvider provider)
+    static IImageProcessor CreateBorderReplacer(IServiceProvider provider)
     {
         var pluginConfiguration = provider.GetRequiredService<PluginConfiguration>();
+        var resizer = new SkiaImageResizer(provider.GetRequiredService<ImageSizeProvider>());
         if (!pluginConfiguration.EnableBorderReplacer)
-            return new SkiaDefaultBorderReplacer();
+            return resizer;
 
         if (pluginConfiguration.RemoveBorder || !pluginConfiguration.SkColor.HasValue)
-            return new SkiaSharpBorderRemover();
+            return new SkiaSharpBorderRemover(resizer);
 
         if (pluginConfiguration.SkColor.HasValue)
-            return new SkiaSharpBorderReplacer(pluginConfiguration.SkColor.Value);
+            return new SkiaSharpImageProcessor(pluginConfiguration.SkColor.Value, resizer);
 
-        return new SkiaDefaultBorderReplacer();
+        return resizer;
     }
 }

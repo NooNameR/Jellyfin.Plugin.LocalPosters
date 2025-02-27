@@ -1,6 +1,10 @@
+using Jellyfin.Data.Enums;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Jellyfin.Plugin.LocalPosters.Entities;
 
@@ -11,37 +15,46 @@ public class PosterRecord
 {
     private string _posterPath;
 
-    private PosterRecord(Guid id, DateTimeOffset createdAt, string posterPath)
+    private PosterRecord(Guid id, BaseItemKind itemKind, ImageType imageType, DateTimeOffset createdAt, string posterPath)
     {
         Id = id;
+        ItemKind = itemKind;
+        ImageType = imageType;
         CreatedAt = createdAt;
         _posterPath = posterPath;
     }
 
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="createdAt"></param>
-    /// <param name="poster"></param>
-    public PosterRecord(Guid id, DateTimeOffset createdAt, FileSystemMetadata poster) : this(id, createdAt, poster.FullName)
+    public PosterRecord(BaseItem item, ImageType imageType, DateTimeOffset createdAt, FileSystemMetadata poster) : this(item.Id,
+        item.GetBaseItemKind(), imageType, createdAt, poster.FullName)
     {
     }
 
     /// <summary>
     /// File id
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id { get; private init; }
 
     /// <summary>
     ///
     /// </summary>
-    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private init; }
 
     /// <summary>
     ///
     /// </summary>
     public DateTimeOffset MatchedAt { get; private set; }
+
+    // TODO: replace after migration
+    /// <summary>
+    ///
+    /// </summary>
+    public ImageType ImageType { get; set; }
+
+    // TODO: replace after migration
+    /// <summary>
+    ///
+    /// </summary>
+    public BaseItemKind ItemKind { get; set; }
 
     /// <summary>
     ///
@@ -77,6 +90,15 @@ public class PosterRecordConfiguration : IEntityTypeConfiguration<PosterRecord>
     public void Configure(EntityTypeBuilder<PosterRecord> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property<string>("_posterPath").HasColumnName("PosterPath").IsRequired();
+        builder.Property<string>("_posterPath")
+            .HasColumnName("PosterPath")
+            .IsRequired();
+
+        builder.Property(t => t.ItemKind)
+            .HasConversion(new EnumToStringConverter<BaseItemKind>())
+            .IsRequired();
+        builder.Property(t => t.ImageType)
+            .HasConversion(new EnumToStringConverter<ImageType>())
+            .IsRequired();
     }
 }
