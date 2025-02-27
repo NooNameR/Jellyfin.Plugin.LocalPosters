@@ -20,6 +20,20 @@ public class EpisodeMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithoutYear()
+    {
+        const int SeasonYear = 2017;
+        const int SeriesYear = 2016;
+        const string SeriesName = "Dexter";
+        const int SeasonIndex = 1;
+        const int EpisodeIndex = 2;
+        const int EpisodeYear = 2018;
+        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+
+        Assert.True(matcher.IsMatch("Dexter - S1 E2.jpg"));
+    }
+
+    [Fact]
     public void MatchSuccessfullyForDoubleDigit()
     {
         const int SeasonYear = 2017;

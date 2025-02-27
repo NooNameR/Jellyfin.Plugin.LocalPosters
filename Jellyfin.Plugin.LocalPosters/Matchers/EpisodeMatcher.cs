@@ -54,15 +54,21 @@ public partial class EpisodeMatcher : IMatcher
         var match = EpisodeRegex().Match(fileName);
         if (!match.Success) return false;
 
-        if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
         if (!int.TryParse(match.Groups[3].Value, out var season)) return false;
         if (!int.TryParse(match.Groups[4].Value, out var episode)) return false;
 
-        return (year == _episodeProductionYear || year == _seriesProductionYear || year == _seasonProductionYear) &&
+        return IsYearMatch(match.Groups[2].Value) &&
                string.Equals(_seriesName, match.Groups[1].Value.SanitizeName(), StringComparison.OrdinalIgnoreCase) &&
                _seasonIndex == season && _episodeIndex == episode;
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*-\s*S(\d+)\s*E(\d+)(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    private bool IsYearMatch(string yearString)
+    {
+        if (!int.TryParse(yearString, out var year)) return true;
+
+        return year == _episodeProductionYear || year == _seriesProductionYear || year == _seasonProductionYear;
+    }
+
+    [GeneratedRegex(@"^(.*?)(?:\s*\((\d{4})\))?\s*-\s*S(\d+)\s*E(\d+)(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex EpisodeRegex();
 }

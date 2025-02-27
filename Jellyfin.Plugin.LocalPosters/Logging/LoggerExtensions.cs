@@ -13,14 +13,14 @@ public static class LoggerExtensions
 {
     private static readonly Action<ILogger, string, int?, string, Exception?> _missingSeasonMessage =
         LoggerMessage.Define<string, int?, string>(LogLevel.Information, 1,
-            "Was not able to match series: {Name} ({Year}), {Season}");
+            "Was not able to match series: {SeriesName} ({Year}), {Season}");
 
     private static readonly Action<ILogger, string, int?, string, int?, string, Exception?> _missingEpisodeMessage =
         LoggerMessage.Define<string, int?, string, int?, string>(LogLevel.Information, 1,
-            "Was not able to match episode: {Name} ({Year}), {Season}, Episode {EpisodeNumber} - {EpisodeName}");
+            "Was not able to match episode: {SeriesName} ({Year}), {Season}, Episode {EpisodeNumber} - {EpisodeName}");
 
     private static readonly Action<ILogger, string, int?, Exception?> _missingSeriesMessage =
-        LoggerMessage.Define<string, int?>(LogLevel.Information, 1, "Was not able to match series: {Name} ({Year})");
+        LoggerMessage.Define<string, int?>(LogLevel.Information, 1, "Was not able to match series: {SeriesName} ({Year})");
 
     private static readonly Action<ILogger, string, int?, Exception?> _missingMovieMessage =
         LoggerMessage.Define<string, int?>(LogLevel.Information, 1, "Was not able to match movie: {Name} ({Year})");
@@ -28,12 +28,16 @@ public static class LoggerExtensions
     private static readonly Action<ILogger, string, Exception?> _missingCollectionMessage =
         LoggerMessage.Define<string>(LogLevel.Information, 1, "Was not able to match collection: {Name}");
 
+    private static readonly Action<ILogger, string, string, int?, string, int?, string, Exception?> _matchingEpisodeMessage =
+        LoggerMessage.Define<string, string, int?, string, int?, string>(LogLevel.Debug, 2,
+            "Matching file {FilePath} for episode: {SeriesName} ({Year}), {Season}, Episode {EpisodeNumber} - {EpisodeName}...");
+
     private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchingSeasonMessage =
         LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 2,
-            "Matching file {FilePath} for series: {Name} ({Year}), {Season}...");
+            "Matching file {FilePath} for series: {SeriesName} ({Year}), {Season}...");
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchingSeriesMessage =
-        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for series: {Name} ({Year})...");
+        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for series: {SeriesName} ({Year})...");
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchingMovieMessage =
         LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 2, "Matching file {FilePath} for movie: {Name} ({Year})...");
@@ -41,12 +45,16 @@ public static class LoggerExtensions
     private static readonly Action<ILogger, string, string, Exception?> _matchingCollectionMessage =
         LoggerMessage.Define<string, string>(LogLevel.Debug, 2, "Matching file {FilePath} for movie: {Name}...");
 
+    private static readonly Action<ILogger, string, string, int?, string, int?, string, Exception?> _matchedEpisodeMessage =
+        LoggerMessage.Define<string, string, int?, string, int?, string>(LogLevel.Debug, 3,
+            "File {FilePath} match series: {SeriesName} ({Year}), {Season}, Episode {EpisodeNumber} - {EpisodeName}");
+
     private static readonly Action<ILogger, string, string, int?, string, Exception?> _matchedSeasonMessage =
         LoggerMessage.Define<string, string, int?, string>(LogLevel.Debug, 3,
-            "File {FilePath} match series: {Name} ({Year}), {Season}");
+            "File {FilePath} match episode: {Name} ({Year}), {Season}");
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchedSeriesMessage =
-        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match series: {Name} ({Year})");
+        LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match series: {SeriesName} ({Year})");
 
     private static readonly Action<ILogger, string, string, int?, Exception?> _matchedMovieMessage =
         LoggerMessage.Define<string, string, int?>(LogLevel.Debug, 3, "File {FilePath} match movie: {Name} ({Year})");
@@ -65,6 +73,13 @@ public static class LoggerExtensions
     {
         switch (item)
         {
+            case Episode episode:
+                _matchingEpisodeMessage(logger, file.FullName, episode.Series.Name,
+                    episode.Series.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
+                    episode.Season.Name,
+                    episode.IndexNumber, episode.Name,
+                    null);
+                break;
             case Season season:
                 _matchingSeasonMessage(logger, file.FullName, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear,
                     season.Name,
@@ -92,6 +107,13 @@ public static class LoggerExtensions
     {
         switch (item)
         {
+            case Episode episode:
+                _matchedEpisodeMessage(logger, file.FullName, episode.Series.Name,
+                    episode.Series.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
+                    episode.Season.Name,
+                    episode.IndexNumber, episode.Name,
+                    null);
+                break;
             case Season season:
                 _matchedSeasonMessage(logger, file.FullName, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear,
                     season.Name,
@@ -125,8 +147,10 @@ public static class LoggerExtensions
                 _missingSeasonMessage(logger, season.Series.Name, season.Series.ProductionYear ?? season.ProductionYear, season.Name, null);
                 break;
             case Episode episode:
-                _missingEpisodeMessage(logger, episode.Series.Name, episode.Series.ProductionYear ?? episode.ProductionYear,
-                    episode.SeasonName, episode.IndexNumber, episode.Name,
+                _missingEpisodeMessage(logger, episode.Series.Name,
+                    episode.Series.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
+                    episode.Season.Name,
+                    episode.IndexNumber, episode.Name,
                     null);
                 break;
             case Movie movie:
