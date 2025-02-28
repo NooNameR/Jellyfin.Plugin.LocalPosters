@@ -46,7 +46,10 @@ public class UpdateTask(
             };
 
             var ids = new HashSet<Guid>(await dbSet.AsNoTracking().Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
-            var records = libraryManager.GetCount(new InternalItemsQuery { IncludeItemTypes = [..matcherFactory.SupportedItemKinds] });
+            var records = libraryManager.GetCount(new InternalItemsQuery
+            {
+                IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = [ImageType.Primary]
+            });
             var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
 
             var metadataRefreshOptions =
@@ -65,6 +68,7 @@ public class UpdateTask(
                 foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
                          {
                              IncludeItemTypes = [..matcherFactory.SupportedItemKinds],
+                             ImageTypes = [ImageType.Primary],
                              StartIndex = startIndex,
                              Limit = BatchSize,
                              SkipDeserialization = true
@@ -93,7 +97,7 @@ public class UpdateTask(
                     .ConfigureAwait(false);
                 dbSet.RemoveRange(itemsToRemove);
                 var removed = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent in library.", removed);
+                logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent inside the library.", removed);
             }
 
             progress.Report(100d);

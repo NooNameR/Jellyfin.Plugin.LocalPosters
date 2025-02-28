@@ -67,7 +67,7 @@ public class SyncGDriveTask(
             if (totalItems > 0)
             {
                 logger.LogInformation("{Items} new items were downloaded, scheduling UpdateTask", totalItems);
-                manager.QueueScheduledTask<UpdateTask>();
+                manager.CancelIfRunningAndQueue<UpdateTask>();
             }
 
             progress.Report(100);
