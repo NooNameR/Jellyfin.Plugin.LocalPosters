@@ -8,6 +8,14 @@
     "owner": "jellyfin",
     "versions": [
       {
+        "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.8.1...0.0.8.2",
+        "checksum": "43cc627c6cc1ee2cbb714c660fc8390d",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.8.2/local-posters_0.0.8.2.zip",
+        "targetAbi": "10.10.6.0",
+        "timestamp": "2025-02-28T12:57:25Z",
+        "version": "0.0.8.2"
+      },
+      {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.8.0...0.0.8.1",
         "checksum": "1841754c3a4d81895b19397c297dc010",
         "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.8.1/local-posters_0.0.8.1.zip",
