@@ -99,6 +99,10 @@ public class PosterRecordConfiguration : IEntityTypeConfiguration<PosterRecord>
             .IsRequired();
         builder.Property(t => t.ImageType)
             .HasConversion(new EnumToStringConverter<ImageType>())
+            .HasDefaultValue(ImageType.Primary)
             .IsRequired();
+
+        builder.Property<byte[]>("RowVersion")
+            .IsRowVersion();
     }
 }

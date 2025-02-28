@@ -25,6 +25,8 @@ public class UpdateTask(
     [FromKeyedServices(Constants.ScheduledTaskLockKey)]
     SemaphoreSlim executionLock) : IScheduledTask
 {
+    const int BatchSize = 5000;
+
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
@@ -35,31 +37,16 @@ public class UpdateTask(
         try
         {
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var queryable = scope.ServiceProvider.GetRequiredService<IQueryable<PosterRecord>>();
+            var context = scope.ServiceProvider.GetRequiredService<Context>();
+            var dbSet = context.Set<PosterRecord>();
 
             var imageRefreshOptions = new ImageRefreshOptions(directoryService)
             {
                 ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [ImageType.Primary]
             };
 
-            var dict = new Dictionary<Guid, BaseItem>();
-            var ids = new HashSet<Guid>(await queryable.Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
-
-            var currentProgress = 0d;
-            foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
-                     {
-                         IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ExcludeItemIds = [..ids]
-                     }))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
-                    dict.Add(item.Id, item);
-            }
-
-            currentProgress += 10;
-            progress.Report(currentProgress);
-
+            var ids = new HashSet<Guid>(await dbSet.AsNoTracking().Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
+            var records = libraryManager.GetCount(new InternalItemsQuery { IncludeItemTypes = [..matcherFactory.SupportedItemKinds] });
             var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
 
             var metadataRefreshOptions =
@@ -70,18 +57,43 @@ public class UpdateTask(
                     ReplaceImages = imageRefreshOptions.ReplaceImages
                 };
 
-            var increaseInProgress = (100 - currentProgress) / dict.Count;
+            var currentProgress = 0d;
+            var increaseInProgress = (95 - currentProgress) / records;
 
-            logger.LogInformation("Found {Items} items to refresh", dict.Count);
-
-            foreach (var (_, item) in dict)
+            for (var startIndex = 0; startIndex < records; startIndex += BatchSize)
             {
-                var result = searcher.Search(item, cancellationToken);
-                if (result.Exists)
-                    await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
+                foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
+                         {
+                             IncludeItemTypes = [..matcherFactory.SupportedItemKinds],
+                             StartIndex = startIndex,
+                             Limit = BatchSize,
+                             SkipDeserialization = true
+                         }))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                currentProgress += increaseInProgress;
-                progress.Report(currentProgress);
+                    if (!ids.Contains(item.Id) && providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
+                    {
+                        var result = searcher.Search(item, cancellationToken);
+                        if (result.Exists)
+                            await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    currentProgress += increaseInProgress;
+                    progress.Report(currentProgress);
+
+                    ids.Remove(item.Id);
+                }
+            }
+
+            if (ids.Count > 0)
+            {
+                var itemsToRemove = await dbSet.Where(x => ids.Contains(x.Id))
+                    .ToArrayAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                dbSet.RemoveRange(itemsToRemove);
+                var removed = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent in library.", removed);
             }
 
             progress.Report(100d);

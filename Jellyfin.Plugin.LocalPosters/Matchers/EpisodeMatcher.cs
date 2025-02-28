@@ -37,7 +37,7 @@ public partial class EpisodeMatcher : IMatcher
     ///
     /// </summary>
     /// <param name="episode"></param>
-    public EpisodeMatcher(Episode episode) : this(episode.Series.Name ?? string.Empty, episode.Series.ProductionYear,
+    public EpisodeMatcher(Episode episode) : this(episode.Series?.Name ?? string.Empty, episode.Series?.ProductionYear,
         episode.Season.IndexNumber,
         episode.Season.ProductionYear,
         episode.IndexNumber,
