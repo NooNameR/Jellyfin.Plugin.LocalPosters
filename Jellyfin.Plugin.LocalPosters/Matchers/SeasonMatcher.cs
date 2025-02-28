@@ -39,7 +39,7 @@ public partial class SeasonMatcher : IMatcher
     /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
-        if (string.IsNullOrEmpty(_seasonName))
+        if (string.IsNullOrEmpty(_seriesName))
             return false;
 
         var match = SeasonRegex().Match(fileName);

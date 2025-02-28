@@ -74,14 +74,15 @@ public static class LoggerExtensions
         switch (item)
         {
             case Episode episode:
-                _matchingEpisodeMessage(logger, file.FullName, episode.Series.Name,
-                    episode.Series.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
-                    episode.Season.Name,
+                _matchingEpisodeMessage(logger, file.FullName, episode.Series?.Name ?? "Unknown Series",
+                    episode.Series?.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
+                    episode.Season?.Name ?? "Unknown Season",
                     episode.IndexNumber, episode.Name,
                     null);
                 break;
             case Season season:
-                _matchingSeasonMessage(logger, file.FullName, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear,
+                _matchingSeasonMessage(logger, file.FullName, season.Series?.Name ?? "Unknown Series",
+                    season.Series?.ProductionYear ?? season.ProductionYear,
                     season.Name,
                     null);
                 break;
@@ -108,14 +109,15 @@ public static class LoggerExtensions
         switch (item)
         {
             case Episode episode:
-                _matchedEpisodeMessage(logger, file.FullName, episode.Series.Name,
-                    episode.Series.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
-                    episode.Season.Name,
+                _matchedEpisodeMessage(logger, file.FullName, episode.Series?.Name ?? "Unknown Series",
+                    episode.Series?.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
+                    episode.Season?.Name ?? "Unknown Season",
                     episode.IndexNumber, episode.Name,
                     null);
                 break;
             case Season season:
-                _matchedSeasonMessage(logger, file.FullName, season.SeriesName, season.Series?.ProductionYear ?? season.ProductionYear,
+                _matchedSeasonMessage(logger, file.FullName, season.Series?.Name ?? "Unknown Series",
+                    season.Series?.ProductionYear ?? season.ProductionYear,
                     season.Name,
                     null);
                 break;
@@ -144,12 +146,13 @@ public static class LoggerExtensions
                 _missingSeriesMessage(logger, series.Name, series.ProductionYear, null);
                 break;
             case Season season:
-                _missingSeasonMessage(logger, season.Series.Name, season.Series.ProductionYear ?? season.ProductionYear, season.Name, null);
+                _missingSeasonMessage(logger, season.Series?.Name ?? "Unknown Series",
+                    season.Series?.ProductionYear ?? season.ProductionYear, season.Name, null);
                 break;
             case Episode episode:
-                _missingEpisodeMessage(logger, episode.Series.Name,
-                    episode.Series.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
-                    episode.Season.Name,
+                _missingEpisodeMessage(logger, episode.Series?.Name ?? "Unknown Series",
+                    episode.Series?.ProductionYear ?? episode.Season.ProductionYear ?? episode.ProductionYear,
+                    episode.Season?.Name ?? "Unknown Season",
                     episode.IndexNumber, episode.Name,
                     null);
                 break;
