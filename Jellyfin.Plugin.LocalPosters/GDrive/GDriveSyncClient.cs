@@ -115,8 +115,8 @@ public sealed class GDriveSyncClient(
             CancellationToken cancellationToken)
         {
             var request = service.Files.Get(fileId);
-            using (var stream = new FileStream(saveTo.FullName, FileMode.Create, FileAccess.Write))
-                await request.DownloadAsync(stream, cancellationToken).ConfigureAwait(false);
+            await using var stream = new FileStream(saveTo.FullName, FileMode.Create, FileAccess.Write);
+            await request.DownloadAsync(stream, cancellationToken).ConfigureAwait(false);
         }
 
         static bool ShouldDownload(FileSystemMetadata file, File driveFile)
