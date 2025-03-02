@@ -3,6 +3,7 @@ using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.GDrive;
 using Jellyfin.Plugin.LocalPosters.Matchers;
+using Jellyfin.Plugin.LocalPosters.Providers;
 using Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller;
@@ -49,6 +50,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddScoped<GDriveServiceProvider>();
         serviceCollection.AddKeyedScoped(GDriveSyncClient.DownloadLimiterKey, GetGDriveDownloadLimiter);
         serviceCollection.AddKeyedSingleton(Constants.ScheduledTaskLockKey, new SemaphoreSlim(1));
+        serviceCollection.AddSingleton<LocalImageProvider>();
     }
 
     static SemaphoreSlim GetGDriveDownloadLimiter(IServiceProvider serviceProvider, object _)

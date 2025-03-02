@@ -1,9 +1,11 @@
 using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.Matchers;
+using Jellyfin.Plugin.LocalPosters.Providers;
 using Jellyfin.Plugin.LocalPosters.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,7 @@ namespace Jellyfin.Plugin.LocalPosters.ScheduledTasks;
 public class UpdateTask(
     ILibraryManager libraryManager,
     ILogger<UpdateTask> logger,
+    LocalImageProvider localImageProvider,
     IProviderManager providerManager,
     IDirectoryService directoryService,
     IServiceScopeFactory serviceScopeFactory,
@@ -50,15 +53,6 @@ public class UpdateTask(
             {
                 IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = [ImageType.Primary]
             });
-            var searcher = scope.ServiceProvider.GetRequiredService<IImageSearcher>();
-
-            var metadataRefreshOptions =
-                new MetadataRefreshOptions(directoryService)
-                {
-                    IsAutomated = false,
-                    ImageRefreshMode = imageRefreshOptions.ImageRefreshMode,
-                    ReplaceImages = imageRefreshOptions.ReplaceImages
-                };
 
             var currentProgress = 0d;
             var increaseInProgress = (95 - currentProgress) / records;
@@ -78,9 +72,12 @@ public class UpdateTask(
 
                     if (!ids.Contains(item.Id) && providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
                     {
-                        var result = searcher.Search(item, cancellationToken);
-                        if (result.Exists)
-                            await item.RefreshMetadata(metadataRefreshOptions, cancellationToken).ConfigureAwait(false);
+                        var image = await localImageProvider.GetImage(item, ImageType.Primary, cancellationToken).ConfigureAwait(false);
+                        if (!image.HasImage)
+                            continue;
+
+                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), ImageType.Primary, null,
+                            cancellationToken).ConfigureAwait(false);
                     }
 
                     currentProgress += increaseInProgress;

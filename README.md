@@ -2,7 +2,20 @@
 
 **Jellyfin.Plugin.LocalPosters** is a plugin for [Jellyfin](https://jellyfin.org/) that prioritizes the use of local poster images for your media library. This ensures that your personal artwork is displayed instead of automatically downloaded images.
 
-It was heavily inspired by: https://github.com/Drazzilb08/daps (So make sure to check the project)
+Inspired by: https://github.com/Drazzilb08/daps (So make sure to check the project)
+
+### Currently supported
+Filename formats from [MediUX](https://mediux.pro/) or [TPDb](https://theposterdb.com/)
+
+Image types:
+- `Primary`
+
+Media Types:
+- `Movie`
+- `BoxSet`
+- `Series`
+- `Season`
+- `Episode` - under the current development
 
 ## Features
 
