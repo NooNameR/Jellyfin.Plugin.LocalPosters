@@ -8,6 +8,14 @@
     "owner": "jellyfin",
     "versions": [
       {
+        "changelog": "## What's Changed\r\n* ci(deps): bump Kevinjil/jellyfin-plugin-repo-action from 0.4.1 to 0.4.3 by @dependabot in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/18\r\n* chore(deps): bump Google.Apis.Drive.v3 from 1.69.0.3693 to 1.69.0.3699 by @dependabot in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/19\r\n\r\n\r\n**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.8.2...0.0.8.3",
+        "checksum": "118ebec22b6c7a0cdc52fc61a0cff0b9",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.8.3/local-posters_0.0.8.3.zip",
+        "targetAbi": "10.10.6.0",
+        "timestamp": "2025-03-08T09:33:01Z",
+        "version": "0.0.8.3"
+      },
+      {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.8.1...0.0.8.2",
         "checksum": "43cc627c6cc1ee2cbb714c660fc8390d",
         "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.8.2/local-posters_0.0.8.2.zip",
