@@ -14,4 +14,14 @@ public class MovieCollectionMatcherTests
 
         Assert.True(matcher.IsMatch("Aquaman Collection.jpg"));
     }
+
+    [Fact]
+    public void MatchSuccessfullyWithWhitespaceBeforeExtensions()
+    {
+        const string CollectionName = "Aquaman Collection";
+
+        var matcher = new MovieCollectionMatcher(CollectionName);
+
+        Assert.True(matcher.IsMatch("Aquaman Collection .jpg"));
+    }
 }

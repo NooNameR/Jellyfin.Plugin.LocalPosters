@@ -69,6 +69,6 @@ public partial class EpisodeMatcher : IMatcher
         return year == _episodeProductionYear || year == _seriesProductionYear || year == _seasonProductionYear;
     }
 
-    [GeneratedRegex(@"^(.*?)(?:\s*\((\d{4})\))?\s*-\s*S(\d+)\s*E(\d+)(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)(?:\s*\((\d{4})\))?\s*-\s*S(\d+)\s*E(\d+)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex EpisodeRegex();
 }

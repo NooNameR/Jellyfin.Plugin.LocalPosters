@@ -17,6 +17,18 @@ public class SeriesMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithWhitespaceBeforeExtensions()
+    {
+        const int SeriesYear = 2016;
+        const string SeriesName = "Dexter: Original Sins";
+
+        var matcher = new SeriesMatcher(SeriesName, SeriesYear);
+
+        Assert.True(matcher.IsMatch("Dexter Original Sins (2016) .jpg"));
+    }
+
+
+    [Fact]
     public void MatchContainingYearInNameSuccessfully()
     {
         const int SeriesYear = 2016;

@@ -18,6 +18,19 @@ public class MovieMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithWhitespaceBeforeExtensions()
+    {
+        const int MovieYear = 2016;
+        const int PremiereYear = 2016;
+        const string MovieName = "Dune: Part One";
+
+        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+
+        Assert.True(matcher.IsMatch("Dune: Part One (2016) .jpg"));
+    }
+
+
+    [Fact]
     public void MatchSuccessfullyWithOddCharacters()
     {
         const int MovieYear = 2019;
