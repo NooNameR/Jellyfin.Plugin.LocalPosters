@@ -42,16 +42,18 @@ public class UpdateTask(
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<Context>();
             var dbSet = context.Set<PosterRecord>();
+            var imageTypes = new[] { ImageType.Primary };
 
             var imageRefreshOptions = new ImageRefreshOptions(directoryService)
             {
-                ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [ImageType.Primary]
+                ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = imageTypes
             };
 
-            var ids = new HashSet<Guid>(await dbSet.AsNoTracking().Select(x => x.Id).ToListAsync(cancellationToken).ConfigureAwait(false));
+            var ids = new HashSet<Guid>(await dbSet.AsNoTracking().Select(x => x.ItemId).ToListAsync(cancellationToken)
+                .ConfigureAwait(false));
             var records = libraryManager.GetCount(new InternalItemsQuery
             {
-                IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = [ImageType.Primary]
+                IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = imageTypes
             });
 
             var currentProgress = 0d;
@@ -62,7 +64,7 @@ public class UpdateTask(
                 foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
                          {
                              IncludeItemTypes = [..matcherFactory.SupportedItemKinds],
-                             ImageTypes = [ImageType.Primary],
+                             ImageTypes = imageTypes,
                              StartIndex = startIndex,
                              Limit = BatchSize,
                              SkipDeserialization = true
@@ -72,11 +74,11 @@ public class UpdateTask(
 
                     if (!ids.Contains(item.Id) && providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
                     {
-                        var image = await localImageProvider.GetImage(item, ImageType.Primary, cancellationToken).ConfigureAwait(false);
+                        var image = await localImageProvider.GetImage(item, imageTypes[0], cancellationToken).ConfigureAwait(false);
                         if (!image.HasImage)
                             continue;
 
-                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), ImageType.Primary, null,
+                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageTypes[0], null,
                             cancellationToken).ConfigureAwait(false);
                     }
 
@@ -89,7 +91,7 @@ public class UpdateTask(
 
             if (ids.Count > 0)
             {
-                var itemsToRemove = await dbSet.Where(x => ids.Contains(x.Id))
+                var itemsToRemove = await dbSet.Where(x => ids.Contains(x.ItemId))
                     .ToArrayAsync(cancellationToken)
                     .ConfigureAwait(false);
                 dbSet.RemoveRange(itemsToRemove);

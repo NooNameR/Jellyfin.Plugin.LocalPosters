@@ -2,6 +2,7 @@ using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
@@ -14,6 +15,11 @@ public interface IMatcherFactory
     ///
     /// </summary>
     HashSet<BaseItemKind> SupportedItemKinds { get; }
+
+    /// <summary>
+    ///
+    /// </summary>
+    HashSet<ImageType> SupportedImageTypes { get; }
 
     /// <summary>
     ///
@@ -35,9 +41,13 @@ public class MatcherFactory : IMatcherFactory
     };
 
     private static readonly HashSet<BaseItemKind> _kinds = [.._factories.Keys];
+    private static readonly HashSet<ImageType> _imageTypes = [ImageType.Primary];
 
     /// <inheritdoc />
     public HashSet<BaseItemKind> SupportedItemKinds => _kinds;
+
+    /// <inheritdoc />
+    public HashSet<ImageType> SupportedImageTypes => _imageTypes;
 
     /// <inheritdoc />
     public IMatcher Create(BaseItem item)

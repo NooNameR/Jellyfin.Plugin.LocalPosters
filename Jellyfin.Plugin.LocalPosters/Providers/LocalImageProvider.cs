@@ -45,7 +45,7 @@ public class LocalImageProvider(
 
         var context = serviceScope.ServiceProvider.GetRequiredService<Context>();
         var dbSet = context.Set<PosterRecord>();
-        var record = await dbSet.FindAsync([item.Id], cancellationToken: cancellationToken)
+        var record = await dbSet.FindAsync([item.Id, type], cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
         var file = searcher.Search(item, cancellationToken);
@@ -67,7 +67,7 @@ public class LocalImageProvider(
         {
             record = new PosterRecord(item, type, now, file);
             record.SetPosterFile(file, now);
-            await dbSet.AddAsync(record, cancellationToken);
+            await dbSet.AddAsync(record, cancellationToken).ConfigureAwait(false);
         }
         else
         {

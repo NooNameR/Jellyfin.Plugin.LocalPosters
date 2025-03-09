@@ -15,9 +15,9 @@ public class PosterRecord
 {
     private string _posterPath;
 
-    private PosterRecord(Guid id, BaseItemKind itemKind, ImageType imageType, DateTimeOffset createdAt, string posterPath)
+    private PosterRecord(Guid itemId, BaseItemKind itemKind, ImageType imageType, DateTimeOffset createdAt, string posterPath)
     {
-        Id = id;
+        ItemId = itemId;
         ItemKind = itemKind;
         ImageType = imageType;
         CreatedAt = createdAt;
@@ -32,7 +32,7 @@ public class PosterRecord
     /// <summary>
     /// File id
     /// </summary>
-    public Guid Id { get; private init; }
+    public Guid ItemId { get; private init; }
 
     /// <summary>
     ///
@@ -89,7 +89,7 @@ public class PosterRecordConfiguration : IEntityTypeConfiguration<PosterRecord>
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<PosterRecord> builder)
     {
-        builder.HasKey(x => x.Id);
+        builder.HasKey(x => new { x.ItemId, x.ImageType });
         builder.Property<string>("_posterPath")
             .HasColumnName("PosterPath")
             .IsRequired();

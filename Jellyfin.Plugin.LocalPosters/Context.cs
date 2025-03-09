@@ -51,24 +51,32 @@ public class Context : DbContext
     //TODO: Remove this
     public void FixData(ILibraryManager manager)
     {
-        var records = Set<PosterRecord>().ToList();
-        var ids = records.Select(r => r.Id).ToArray();
-        var items = manager.GetItemList(new InternalItemsQuery { ItemIds = ids }).ToDictionary(x => x.Id);
+        var records = Set<PosterRecord>().ToDictionary(x => x.ItemId);
+        var count = manager.GetCount(new InternalItemsQuery());
+        const int BatchSize = 5000;
 
-        foreach (var record in records)
+        for (var startIndex = 0; startIndex < count; startIndex += BatchSize)
         {
-            if (!items.TryGetValue(record.Id, out var item))
-                continue;
-
-            if (item.GetBaseItemKind() != record.ItemKind)
+            var hasChanges = false;
+            foreach (var lItem in manager.GetItemList(new InternalItemsQuery
+                     {
+                         StartIndex = startIndex, Limit = BatchSize, SkipDeserialization = true
+                     }))
             {
-                record.ItemKind = item.GetBaseItemKind();
-                record.ImageType = ImageType.Primary;
-            }
-        }
+                if (!records.TryGetValue(lItem.Id, out var item))
+                    continue;
 
-        Set<PosterRecord>().UpdateRange(records);
-        SaveChanges();
+                if (lItem.GetBaseItemKind() == item.ItemKind)
+                    continue;
+
+                item.ItemKind = lItem.GetBaseItemKind();
+                item.ImageType = ImageType.Primary;
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+                SaveChanges();
+        }
     }
 }
 
