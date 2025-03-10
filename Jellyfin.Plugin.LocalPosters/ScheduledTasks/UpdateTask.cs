@@ -160,7 +160,7 @@ public class UpdateTask(
                     {
                         await ProcessItem(i.Key, i.Value).ConfigureAwait(false);
 
-                        if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
+                        if (!await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
                             break;
 
                         continue;
