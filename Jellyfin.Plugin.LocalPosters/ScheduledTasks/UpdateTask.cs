@@ -50,8 +50,8 @@ public class UpdateTask(
                 .ConfigureAwait(false));
 
             var currentProgress = 0d;
+            var concurrencyLimit = Environment.ProcessorCount * 2;
             const int BatchSize = 5000;
-            const int ConcurrencyLimit = 50;
 
             var channel = Channel.CreateBounded<KeyValuePair<Guid, HashSet<ImageType>>>(new BoundedChannelOptions(BatchSize)
             {
@@ -114,7 +114,7 @@ public class UpdateTask(
             Task StartReaders(ChannelReader<KeyValuePair<Guid, HashSet<ImageType>>> reader)
             {
 #pragma warning disable IDISP013
-                return Task.WhenAll(Enumerable.Range(0, ConcurrencyLimit).Select(_ => Task.Run(ReaderTask, cancellationToken)));
+                return Task.WhenAll(Enumerable.Range(0, concurrencyLimit).Select(_ => Task.Run(ReaderTask, cancellationToken)));
 #pragma warning restore IDISP013
                 async Task ReaderTask()
                 {
