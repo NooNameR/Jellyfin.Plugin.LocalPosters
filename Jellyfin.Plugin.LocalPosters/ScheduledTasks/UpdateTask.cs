@@ -106,13 +106,14 @@ public class UpdateTask(
                 progress.Report(currentProgress += increaseInProgress);
             }
 
-            increaseInProgress = (95 - currentProgress) / items.Values.Count;
+            var totalImages = items.Values.Sum(x => x.Count);
+            increaseInProgress = (95 - currentProgress) / totalImages;
 
             var concurrencyLimit = Environment.ProcessorCount;
             var readerTask = StartReaders(channel.Reader);
 
             logger.LogInformation("Starting matching for {ItemsCount} unique items, and total: {TotalCount} using {NumThreads} threads",
-                items.Count, items.Values.Count, concurrencyLimit);
+                items.Count, totalImages, concurrencyLimit);
 
             foreach (var tuple in items)
                 await channel.Writer.WriteAsync(tuple, cancellationToken).ConfigureAwait(false);
