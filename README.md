@@ -7,15 +7,12 @@ Inspired by: https://github.com/Drazzilb08/daps (So make sure to check the proje
 ### Currently supported
 Filename formats from [MediUX](https://mediux.pro/) or [TPDb](https://theposterdb.com/)
 
-Image types:
-- `Primary`
-
 Media Types:
 - `Movie`
 - `BoxSet`
 - `Series`
 - `Season`
-- `Episode` - under the current development
+- `Episode`
 
 ## Features
 

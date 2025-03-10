@@ -1,5 +1,4 @@
 using Jellyfin.Plugin.LocalPosters.Entities;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -51,32 +50,22 @@ public class Context : DbContext
     //TODO: Remove this
     public void FixData(ILibraryManager manager)
     {
-        var records = Set<PosterRecord>().Where(x => x.ImageType == ImageType.Primary).ToDictionary(x => x.ItemId);
-        var count = manager.GetCount(new InternalItemsQuery());
-        const int BatchSize = 5000;
-
-        for (var startIndex = 0; startIndex < count; startIndex += BatchSize)
+        var dbSet = Set<PosterRecord>();
+        var records = dbSet.Where(x => x.ImageType == ImageType.Primary).ToArray();
+        var hasChanges = false;
+        foreach (var record in records)
         {
-            var hasChanges = false;
-            foreach (var lItem in manager.GetItemList(new InternalItemsQuery
-                     {
-                         StartIndex = startIndex, Limit = BatchSize, SkipDeserialization = true
-                     }))
-            {
-                if (!records.TryGetValue(lItem.Id, out var item))
-                    continue;
+            var item = manager.GetItemById(record.ItemId);
+            if (item == null)
+                continue;
 
-                if (lItem.GetBaseItemKind() == item.ItemKind)
-                    continue;
-
-                item.ItemKind = lItem.GetBaseItemKind();
-                item.ImageType = ImageType.Primary;
-                hasChanges = true;
-            }
-
-            if (hasChanges)
-                SaveChanges();
+            record.ItemKind = item.GetBaseItemKind();
+            dbSet.Update(record);
+            hasChanges = true;
         }
+
+        if (hasChanges)
+            SaveChanges();
     }
 }
 
