@@ -49,8 +49,13 @@ public class MatcherFactory : IMatcherFactory
     public HashSet<BaseItemKind> SupportedItemKinds => _kinds;
 
     /// <inheritdoc />
-    public HashSet<ImageType> SupportedImageTypes(BaseItem item) => _imageTypes;
+    public HashSet<ImageType> SupportedImageTypes(BaseItem item)
+    {
+        if (item.GetBaseItemKind() == BaseItemKind.Episode || item.GetBaseItemKind() == BaseItemKind.Season)
+            return [ImageType.Primary];
 
+        return _imageTypes;
+    }
 
     /// <inheritdoc />
     public IMatcher Create(ImageType imageType, BaseItem item)

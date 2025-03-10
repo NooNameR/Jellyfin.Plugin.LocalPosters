@@ -50,7 +50,6 @@ public class UpdateTask(
                 .ConfigureAwait(false));
 
             var currentProgress = 0d;
-            var concurrencyLimit = Environment.ProcessorCount * 2;
             const int BatchSize = 5000;
 
             var channel = Channel.CreateBounded<KeyValuePair<Guid, HashSet<ImageType>>>(new BoundedChannelOptions(BatchSize)
@@ -109,65 +108,16 @@ public class UpdateTask(
 
             increaseInProgress = (95 - currentProgress) / items.Values.Count;
 
+            var concurrencyLimit = Environment.ProcessorCount;
             var readerTask = StartReaders(channel.Reader);
 
-            Task StartReaders(ChannelReader<KeyValuePair<Guid, HashSet<ImageType>>> reader)
-            {
-#pragma warning disable IDISP013
-                return Task.WhenAll(Enumerable.Range(0, concurrencyLimit).Select(_ => Task.Run(ReaderTask, cancellationToken)));
-#pragma warning restore IDISP013
-                async Task ReaderTask()
-                {
-                    if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
-                        return;
-
-                    while (reader.TryRead(out var i))
-                    {
-                        await ProcessItem().ConfigureAwait(false);
-
-                        lock (_lock)
-                            progress.Report(currentProgress += increaseInProgress);
-
-                        if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
-                            break;
-
-                        continue;
-
-                        async Task ProcessItem()
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-
-                            var item = libraryManager.GetItemById(i.Key);
-                            if (item == null)
-                                return;
-
-                            foreach (var imageType in i.Value)
-                            {
-                                var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
-                                if (!image.HasImage)
-                                    return;
-
-                                await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
-                                    cancellationToken).ConfigureAwait(false);
-                            }
-                        }
-                    }
-                }
-            }
+            logger.LogInformation("Starting matching for {ItemsCount} unique items, and total: {TotalCount} using {NumThreads} threads",
+                items.Count, items.Values.Count, concurrencyLimit);
 
             foreach (var tuple in items)
                 await channel.Writer.WriteAsync(tuple, cancellationToken).ConfigureAwait(false);
 
             channel.Writer.Complete();
-
-            async Task<int> RemoveItems(HashSet<Guid> slice)
-            {
-                var itemsToRemove = await dbSet.Where(x => slice.Contains(x.ItemId))
-                    .ToArrayAsync(cancellationToken)
-                    .ConfigureAwait(false);
-                dbSet.RemoveRange(itemsToRemove);
-                return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            }
 
             var removed = 0;
             while (ids.Count > 0)
@@ -185,9 +135,62 @@ public class UpdateTask(
                 logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent inside the library.", removed);
 
             progress.Report(100d);
+            return;
+
+            async Task<int> RemoveItems(HashSet<Guid> slice)
+            {
+                var itemsToRemove = await dbSet.Where(x => slice.Contains(x.ItemId))
+                    .ToArrayAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                dbSet.RemoveRange(itemsToRemove);
+                return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            Task StartReaders(ChannelReader<KeyValuePair<Guid, HashSet<ImageType>>> reader)
+            {
+#pragma warning disable IDISP013
+                return Task.WhenAll(Enumerable.Range(0, concurrencyLimit).Select(_ => Task.Run(ReaderTask, cancellationToken)));
+#pragma warning restore IDISP013
+                async Task ReaderTask()
+                {
+                    if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
+                        return;
+
+                    while (reader.TryRead(out var i))
+                    {
+                        await ProcessItem(i.Key, i.Value).ConfigureAwait(false);
+
+                        if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
+                            break;
+
+                        continue;
+
+                        async Task ProcessItem(Guid id, HashSet<ImageType> types)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            var item = libraryManager.GetItemById(id);
+                            if (item == null)
+                                return;
+
+                            foreach (var imageType in types)
+                            {
+                                var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
+                                if (!image.HasImage)
+                                    return;
+
+                                await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
+                                    cancellationToken).ConfigureAwait(false);
+
+                                lock (_lock)
+                                    progress.Report(currentProgress += increaseInProgress);
+                            }
+                        }
+                    }
+                }
+            }
         }
         finally
-
         {
             executionLock.Release();
         }
