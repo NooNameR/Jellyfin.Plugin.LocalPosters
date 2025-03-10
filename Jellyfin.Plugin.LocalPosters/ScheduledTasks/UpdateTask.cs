@@ -153,35 +153,35 @@ public class UpdateTask(
 #pragma warning restore IDISP013
                 async Task ReaderTask()
                 {
-                    if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
-                        return;
-
-                    while (reader.TryRead(out var i))
+                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        await ProcessItem(i.Key, i.Value).ConfigureAwait(false);
-
-                        if (!await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
-                            break;
-
-                        continue;
-
-                        async Task ProcessItem(Guid id, HashSet<ImageType> types)
+                        while (reader.TryRead(out var i))
                         {
-                            cancellationToken.ThrowIfCancellationRequested();
+                            await ProcessItem(i.Key, i.Value).ConfigureAwait(false);
 
-                            var item = libraryManager.GetItemById(id);
-                            if (item == null)
-                                return;
+                            if (!await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
+                                break;
 
-                            foreach (var imageType in types)
+                            continue;
+
+                            async Task ProcessItem(Guid id, HashSet<ImageType> types)
                             {
-                                var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
-                                if (image.HasImage)
-                                    await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
-                                        cancellationToken).ConfigureAwait(false);
+                                cancellationToken.ThrowIfCancellationRequested();
 
-                                lock (_lock)
-                                    progress.Report(currentProgress += increaseInProgress);
+                                var item = libraryManager.GetItemById(id);
+                                if (item == null)
+                                    return;
+
+                                foreach (var imageType in types)
+                                {
+                                    var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
+                                    if (image.HasImage)
+                                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
+                                            cancellationToken).ConfigureAwait(false);
+
+                                    lock (_lock)
+                                        progress.Report(currentProgress += increaseInProgress);
+                                }
                             }
                         }
                     }
