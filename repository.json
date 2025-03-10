@@ -9,11 +9,11 @@
     "versions": [
       {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.9.0...0.0.9.1",
-        "checksum": "12eb3705f3fbc8d866dc1dc13bf7e411",
-        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.9.1/local-posters_0.0.9.0.zip",
+        "checksum": "4008c069b59f3fa7612090cf1c1b964a",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.9.1/local-posters_0.0.9.1.zip",
         "targetAbi": "10.10.6.0",
-        "timestamp": "2025-03-10T19:05:37Z",
-        "version": "0.0.9.0"
+        "timestamp": "2025-03-10T19:09:02Z",
+        "version": "0.0.9.1"
       },
       {
         "changelog": "## What's Changed\r\n* chore(deps): bump Google.Apis.Drive.v3 from 1.69.0.3699 to 1.69.0.3703 by @dependabot in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/20\r\n* Add support for Art matcher by @NooNameR in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/21\r\n\r\n\r\n**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.8.4...0.0.9.0",
