@@ -19,6 +19,13 @@ public interface IImageSearcher
     /// <summary>
     ///
     /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    HashSet<ImageType> SupportedImages(BaseItem item);
+
+    /// <summary>
+    ///
+    /// </summary>
     /// <param name="imageType"></param>
     /// <param name="item"></param>
     /// <param name="cancellationToken"></param>

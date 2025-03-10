@@ -33,7 +33,7 @@ public class LocalImageProvider(
     /// <inheritdoc />
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
     {
-        return [ImageType.Primary];
+        return searcher.SupportedImages(item);
     }
 
     /// <inheritdoc />

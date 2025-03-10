@@ -43,12 +43,8 @@ public class UpdateTask(
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<Context>();
             var dbSet = context.Set<PosterRecord>();
-            var imageTypes = new[] { ImageType.Primary };
 
-            var count = libraryManager.GetCount(new InternalItemsQuery
-            {
-                IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = imageTypes
-            });
+            var count = libraryManager.GetCount(new InternalItemsQuery { IncludeItemTypes = [..matcherFactory.SupportedItemKinds] });
 
             var ids = new HashSet<Guid>(await dbSet.AsTracking().Select(x => x.ItemId).ToListAsync(cancellationToken)
                 .ConfigureAwait(false));
@@ -69,7 +65,6 @@ public class UpdateTask(
                 var library = libraryManager.GetItemList(new InternalItemsQuery
                 {
                     IncludeItemTypes = [..matcherFactory.SupportedItemKinds],
-                    ImageTypes = imageTypes,
                     StartIndex = startIndex,
                     Limit = BatchSize,
                     SkipDeserialization = true
@@ -85,7 +80,7 @@ public class UpdateTask(
 
                 foreach (var item in library)
                 {
-                    foreach (var imageType in imageTypes)
+                    foreach (var imageType in matcherFactory.SupportedImageTypes(item))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 

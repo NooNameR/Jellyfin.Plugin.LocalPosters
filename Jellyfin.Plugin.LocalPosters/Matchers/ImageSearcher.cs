@@ -39,9 +39,15 @@ public class ImageSearcher : IImageSearcher
     }
 
     /// <inheritdoc />
+    public HashSet<ImageType> SupportedImages(BaseItem item)
+    {
+        return _matcherFactory.SupportedImageTypes(item);
+    }
+
+    /// <inheritdoc />
     public FileSystemMetadata Search(ImageType imageType, BaseItem item, CancellationToken cancellationToken)
     {
-        var matcher = _matcherFactory.Create(item);
+        var matcher = _matcherFactory.Create(imageType, item);
         for (var i = 0; i < _configuration.Folders.Length; i++)
         {
             if (string.IsNullOrEmpty(_configuration.Folders[i].LocalPath))
@@ -51,20 +57,20 @@ public class ImageSearcher : IImageSearcher
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                _logger.LogMatching(file, item);
+                _logger.LogMatching(file, imageType, item);
 
                 var match = matcher.IsMatch(file.Name);
 
                 if (!match)
                     continue;
 
-                _logger.LogMatched(item, file);
+                _logger.LogMatched(imageType, item, file);
 
                 return file;
             }
         }
 
-        _logger.LogMissing(item);
+        _logger.LogMissing(imageType, item);
 
         return _emptyMetadata.Value;
     }

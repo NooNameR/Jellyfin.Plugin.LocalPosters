@@ -19,6 +19,12 @@ public class CachedImageSearcher(IImageSearcher searcher, IMemoryCache cache, IF
     }
 
     /// <inheritdoc />
+    public HashSet<ImageType> SupportedImages(BaseItem item)
+    {
+        return searcher.SupportedImages(item);
+    }
+
+    /// <inheritdoc />
     public FileSystemMetadata Search(ImageType imageType, BaseItem item, CancellationToken cancellationToken)
     {
         var cacheKey = CacheKey(imageType, item);

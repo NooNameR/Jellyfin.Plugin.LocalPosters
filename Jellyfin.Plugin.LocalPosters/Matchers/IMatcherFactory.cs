@@ -19,13 +19,13 @@ public interface IMatcherFactory
     /// <summary>
     ///
     /// </summary>
-    HashSet<ImageType> SupportedImageTypes { get; }
+    HashSet<ImageType> SupportedImageTypes(BaseItem item);
 
     /// <summary>
     ///
     /// </summary>
     /// <returns></returns>
-    IMatcher Create(BaseItem item);
+    IMatcher Create(ImageType imageType, BaseItem item);
 }
 
 /// <inheritdoc />
@@ -41,18 +41,25 @@ public class MatcherFactory : IMatcherFactory
     };
 
     private static readonly HashSet<BaseItemKind> _kinds = [.._factories.Keys];
-    private static readonly HashSet<ImageType> _imageTypes = [ImageType.Primary];
+
+    private static readonly HashSet<ImageType> _imageTypes =
+        [ImageType.Primary, ImageType.Art, ImageType.Backdrop, ImageType.Logo, ImageType.Banner];
 
     /// <inheritdoc />
     public HashSet<BaseItemKind> SupportedItemKinds => _kinds;
 
     /// <inheritdoc />
-    public HashSet<ImageType> SupportedImageTypes => _imageTypes;
+    public HashSet<ImageType> SupportedImageTypes(BaseItem item) => _imageTypes;
+
 
     /// <inheritdoc />
-    public IMatcher Create(BaseItem item)
+    public IMatcher Create(ImageType imageType, BaseItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
+
+        if (imageType != ImageType.Primary)
+            return new ArtMatcher(item, imageType);
+
         if (!_factories.TryGetValue(item.GetBaseItemKind(), out var factory))
             throw new InvalidOperationException($"No factory registered for type {item.GetType()}");
 
