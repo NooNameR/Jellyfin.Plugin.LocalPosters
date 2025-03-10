@@ -44,22 +44,19 @@ public class UpdateTask(
             var dbSet = context.Set<PosterRecord>();
             var imageTypes = new[] { ImageType.Primary };
 
-            var imageRefreshOptions = new ImageRefreshOptions(directoryService)
-            {
-                ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = imageTypes
-            };
+            var records = await dbSet.AsNoTracking().Select(x => new { x.ItemId, x.ImageType }).GroupBy(x => x.ItemId, x => x.ImageType)
+                .ToDictionaryAsync(x => x.Key, x => x.ToHashSet(), cancellationToken)
+                .ConfigureAwait(false);
 
-            var ids = new HashSet<Guid>(await dbSet.AsNoTracking().Select(x => x.ItemId).ToListAsync(cancellationToken)
-                .ConfigureAwait(false));
-            var records = libraryManager.GetCount(new InternalItemsQuery
+            var count = libraryManager.GetCount(new InternalItemsQuery
             {
                 IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = imageTypes
             });
 
             var currentProgress = 0d;
-            var increaseInProgress = (95 - currentProgress) / records;
+            var increaseInProgress = (95 - currentProgress) / count;
 
-            for (var startIndex = 0; startIndex < records; startIndex += BatchSize)
+            for (var startIndex = 0; startIndex < count; startIndex += BatchSize)
             {
                 foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
                          {
@@ -70,34 +67,52 @@ public class UpdateTask(
                              SkipDeserialization = true
                          }))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (!ids.Contains(item.Id) && providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
+                    foreach (var imageType in imageTypes)
                     {
-                        var image = await localImageProvider.GetImage(item, imageTypes[0], cancellationToken).ConfigureAwait(false);
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (records.TryGetValue(item.Id, out var types) && types.Contains(imageType))
+                            continue;
+
+                        var imageRefreshOptions = new ImageRefreshOptions(directoryService)
+                        {
+                            ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = imageTypes
+                        };
+
+                        if (!providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
+                            continue;
+
+                        var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
                         if (!image.HasImage)
                             continue;
 
-                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageTypes[0], null,
+                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
                             cancellationToken).ConfigureAwait(false);
                     }
 
                     currentProgress += increaseInProgress;
                     progress.Report(currentProgress);
 
-                    ids.Remove(item.Id);
+                    records.Remove(item.Id);
                 }
             }
 
-            if (ids.Count > 0)
+            var removed = 0;
+            while (records.Count > 0)
             {
-                var itemsToRemove = await dbSet.Where(x => ids.Contains(x.ItemId))
+                var slice = new HashSet<Guid>(records.Keys.Take(BatchSize));
+                var itemsToRemove = await dbSet.Where(x => slice.Contains(x.ItemId))
                     .ToArrayAsync(cancellationToken)
                     .ConfigureAwait(false);
                 dbSet.RemoveRange(itemsToRemove);
-                var removed = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent inside the library.", removed);
+                removed += await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                foreach (var itemToRemove in slice)
+                    records.Remove(itemToRemove);
             }
+
+            if (removed > 0)
+                logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent inside the library.", removed);
 
             progress.Report(100d);
         }
