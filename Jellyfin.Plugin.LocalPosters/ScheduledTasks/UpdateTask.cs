@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using Jellyfin.Plugin.LocalPosters.Entities;
 using Jellyfin.Plugin.LocalPosters.Matchers;
 using Jellyfin.Plugin.LocalPosters.Providers;
@@ -28,7 +29,7 @@ public class UpdateTask(
     [FromKeyedServices(Constants.ScheduledTaskLockKey)]
     SemaphoreSlim executionLock) : IScheduledTask
 {
-    const int BatchSize = 5000;
+    private readonly object _lock = new();
 
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
@@ -44,28 +45,45 @@ public class UpdateTask(
             var dbSet = context.Set<PosterRecord>();
             var imageTypes = new[] { ImageType.Primary };
 
-            var records = await dbSet.AsNoTracking().Select(x => new { x.ItemId, x.ImageType }).GroupBy(x => x.ItemId, x => x.ImageType)
-                .ToDictionaryAsync(x => x.Key, x => x.ToHashSet(), cancellationToken)
-                .ConfigureAwait(false);
-
             var count = libraryManager.GetCount(new InternalItemsQuery
             {
                 IncludeItemTypes = [..matcherFactory.SupportedItemKinds], ImageTypes = imageTypes
             });
 
-            var currentProgress = 0d;
-            var increaseInProgress = (95 - currentProgress) / count;
+            var ids = new HashSet<Guid>(await dbSet.AsTracking().Select(x => x.ItemId).ToListAsync(cancellationToken)
+                .ConfigureAwait(false));
 
+            var currentProgress = 0d;
+            const int BatchSize = 5000;
+            const int ConcurrencyLimit = 50;
+
+            var channel = Channel.CreateBounded<KeyValuePair<Guid, HashSet<ImageType>>>(new BoundedChannelOptions(BatchSize)
+            {
+                FullMode = BoundedChannelFullMode.Wait, SingleReader = false, SingleWriter = true,
+            });
+
+            var increaseInProgress = (20 - currentProgress) / (Math.Max(1, count / (double)BatchSize));
+            var items = new Dictionary<Guid, HashSet<ImageType>>();
             for (var startIndex = 0; startIndex < count; startIndex += BatchSize)
             {
-                foreach (var item in libraryManager.GetItemList(new InternalItemsQuery
-                         {
-                             IncludeItemTypes = [..matcherFactory.SupportedItemKinds],
-                             ImageTypes = imageTypes,
-                             StartIndex = startIndex,
-                             Limit = BatchSize,
-                             SkipDeserialization = true
-                         }))
+                var library = libraryManager.GetItemList(new InternalItemsQuery
+                {
+                    IncludeItemTypes = [..matcherFactory.SupportedItemKinds],
+                    ImageTypes = imageTypes,
+                    StartIndex = startIndex,
+                    Limit = BatchSize,
+                    SkipDeserialization = true
+                });
+
+                var libraryIds = new HashSet<Guid>(library.Select(x => x.Id));
+
+                var records = await dbSet.AsNoTracking().Where(x => libraryIds.Contains(x.ItemId))
+                    .Select(x => new { x.ItemId, x.ImageType })
+                    .GroupBy(x => x.ItemId, x => x.ImageType)
+                    .ToDictionaryAsync(x => x.Key, x => x.ToHashSet(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (var item in library)
                 {
                     foreach (var imageType in imageTypes)
                     {
@@ -76,40 +94,97 @@ public class UpdateTask(
 
                         var imageRefreshOptions = new ImageRefreshOptions(directoryService)
                         {
-                            ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = imageTypes
+                            ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [imageType]
                         };
 
                         if (!providerManager.HasImageProviderEnabled(item, imageRefreshOptions))
                             continue;
 
-                        var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
-                        if (!image.HasImage)
-                            continue;
-
-                        await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
-                            cancellationToken).ConfigureAwait(false);
+                        if (items.TryGetValue(item.Id, out var images))
+                            images.Add(imageType);
+                        else
+                            items[item.Id] = [imageType];
                     }
 
-                    currentProgress += increaseInProgress;
-                    progress.Report(currentProgress);
+                    ids.Remove(item.Id);
+                }
 
-                    records.Remove(item.Id);
+                progress.Report(currentProgress += increaseInProgress);
+            }
+
+            increaseInProgress = (95 - currentProgress) / items.Values.Count;
+
+            var readerTask = StartReaders(channel.Reader);
+
+            Task StartReaders(ChannelReader<KeyValuePair<Guid, HashSet<ImageType>>> reader)
+            {
+#pragma warning disable IDISP013
+                return Task.WhenAll(Enumerable.Range(0, ConcurrencyLimit).Select(_ => Task.Run(ReaderTask, cancellationToken)));
+#pragma warning restore IDISP013
+                async Task ReaderTask()
+                {
+                    if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
+                        return;
+
+                    while (reader.TryRead(out var i))
+                    {
+                        await ProcessItem().ConfigureAwait(false);
+
+                        lock (_lock)
+                            progress.Report(currentProgress += increaseInProgress);
+
+                        if (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) == false)
+                            break;
+
+                        continue;
+
+                        async Task ProcessItem()
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            var item = libraryManager.GetItemById(i.Key);
+                            if (item == null)
+                                return;
+
+                            foreach (var imageType in i.Value)
+                            {
+                                var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
+                                if (!image.HasImage)
+                                    return;
+
+                                await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
+                                    cancellationToken).ConfigureAwait(false);
+                            }
+                        }
+                    }
                 }
             }
 
-            var removed = 0;
-            while (records.Count > 0)
+            foreach (var tuple in items)
+                await channel.Writer.WriteAsync(tuple, cancellationToken).ConfigureAwait(false);
+
+            channel.Writer.Complete();
+
+            async Task<int> RemoveItems(HashSet<Guid> slice)
             {
-                var slice = new HashSet<Guid>(records.Keys.Take(BatchSize));
                 var itemsToRemove = await dbSet.Where(x => slice.Contains(x.ItemId))
                     .ToArrayAsync(cancellationToken)
                     .ConfigureAwait(false);
                 dbSet.RemoveRange(itemsToRemove);
-                removed += await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                return await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            var removed = 0;
+            while (ids.Count > 0)
+            {
+                var slice = new HashSet<Guid>(ids.Take(BatchSize));
+                removed += await RemoveItems(slice).ConfigureAwait(false);
 
                 foreach (var itemToRemove in slice)
-                    records.Remove(itemToRemove);
+                    ids.Remove(itemToRemove);
             }
+
+            await readerTask.ConfigureAwait(false);
 
             if (removed > 0)
                 logger.LogInformation("{ItemsCount} items were removed from db, as nonexistent inside the library.", removed);
@@ -117,6 +192,7 @@ public class UpdateTask(
             progress.Report(100d);
         }
         finally
+
         {
             executionLock.Release();
         }

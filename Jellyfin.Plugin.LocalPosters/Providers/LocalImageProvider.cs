@@ -48,7 +48,7 @@ public class LocalImageProvider(
         var record = await dbSet.FindAsync([item.Id, type], cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        var file = searcher.Search(item, cancellationToken);
+        var file = searcher.Search(type, item, cancellationToken);
 
         if (!file.Exists)
         {

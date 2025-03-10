@@ -1,6 +1,7 @@
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.Logging;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 
@@ -38,7 +39,7 @@ public class ImageSearcher : IImageSearcher
     }
 
     /// <inheritdoc />
-    public FileSystemMetadata Search(BaseItem item, CancellationToken cancellationToken)
+    public FileSystemMetadata Search(ImageType imageType, BaseItem item, CancellationToken cancellationToken)
     {
         var matcher = _matcherFactory.Create(item);
         for (var i = 0; i < _configuration.Folders.Length; i++)
