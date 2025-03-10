@@ -8,20 +8,21 @@ public class ImageSizeProvider
 {
     public Size GetImageSize(BaseItemKind kind, ImageType imageType)
     {
-        if (imageType != ImageType.Primary)
-            throw new NotSupportedException($"Image type {imageType} is not supported");
-
-        switch (kind)
+        return imageType switch
         {
-            case BaseItemKind.BoxSet:
-            case BaseItemKind.Movie:
-            case BaseItemKind.Series:
-            case BaseItemKind.Season:
-                return new Size(1000, 1500);
-            case BaseItemKind.Episode:
-                return new Size(1920, 1080);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-        }
+            ImageType.Primary => kind switch
+            {
+                BaseItemKind.BoxSet or BaseItemKind.Movie or BaseItemKind.Series or BaseItemKind.Season => new Size(1000, 1500),
+                BaseItemKind.Episode => new Size(1920, 1080),
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            },
+            ImageType.Backdrop => new Size(1920, 1080),
+            ImageType.Art => new Size(500, 281),
+            ImageType.Banner => new Size(1000, 185),
+            ImageType.Thumb => new Size(1000, 562),
+            ImageType.Logo => new Size(800, 310),
+            ImageType.Disc => new Size(1000, 1000),
+            _ => throw new NotSupportedException("Not supported image type")
+        };
     }
 }

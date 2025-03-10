@@ -176,11 +176,9 @@ public class UpdateTask(
                             foreach (var imageType in types)
                             {
                                 var image = await localImageProvider.GetImage(item, imageType, cancellationToken).ConfigureAwait(false);
-                                if (!image.HasImage)
-                                    return;
-
-                                await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
-                                    cancellationToken).ConfigureAwait(false);
+                                if (image.HasImage)
+                                    await providerManager.SaveImage(item, image.Stream, image.Format.GetMimeType(), imageType, null,
+                                        cancellationToken).ConfigureAwait(false);
 
                                 lock (_lock)
                                     progress.Report(currentProgress += increaseInProgress);
