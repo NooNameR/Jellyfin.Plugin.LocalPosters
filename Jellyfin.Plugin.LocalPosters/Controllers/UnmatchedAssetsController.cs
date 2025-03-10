@@ -45,7 +45,8 @@ public class UnmatchedAssetsController(
 
         var dict = new Dictionary<Guid, BaseItem>();
         var records = libraryManager.GetCount(new InternalItemsQuery { IncludeItemTypes = [kind], ImageTypes = [type] });
-        var ids = new HashSet<Guid>(await queryable.Select(x => x.Id).ToListAsync(HttpContext.RequestAborted).ConfigureAwait(false));
+        var ids = new HashSet<Guid>(await queryable.Where(x => x.ImageType == type).Select(x => x.ItemId)
+            .ToListAsync(HttpContext.RequestAborted).ConfigureAwait(false));
         var imageRefreshOptions = new ImageRefreshOptions(directoryService)
         {
             ImageRefreshMode = MetadataRefreshMode.FullRefresh, ReplaceImages = [type]

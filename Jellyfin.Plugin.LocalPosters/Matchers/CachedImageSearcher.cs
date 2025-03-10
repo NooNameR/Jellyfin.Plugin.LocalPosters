@@ -1,4 +1,5 @@
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -18,9 +19,15 @@ public class CachedImageSearcher(IImageSearcher searcher, IMemoryCache cache, IF
     }
 
     /// <inheritdoc />
-    public FileSystemMetadata Search(BaseItem item, CancellationToken cancellationToken)
+    public HashSet<ImageType> SupportedImages(BaseItem item)
     {
-        var cacheKey = CacheKey(item);
+        return searcher.SupportedImages(item);
+    }
+
+    /// <inheritdoc />
+    public FileSystemMetadata Search(ImageType imageType, BaseItem item, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKey(imageType, item);
         FileSystemMetadata file;
         if (cache.TryGetValue<string>(cacheKey, out var cachedPath) && cachedPath != null)
         {
@@ -32,7 +39,7 @@ public class CachedImageSearcher(IImageSearcher searcher, IMemoryCache cache, IF
             cache.Remove(cacheKey);
         }
 
-        file = searcher.Search(item, cancellationToken);
+        file = searcher.Search(imageType, item, cancellationToken);
         if (file.Exists)
         {
             var cacheEntryOptions = new MemoryCacheEntryOptions()
@@ -44,8 +51,8 @@ public class CachedImageSearcher(IImageSearcher searcher, IMemoryCache cache, IF
         return file;
     }
 
-    static string CacheKey(BaseItem item)
+    static string CacheKey(ImageType imageType, BaseItem item)
     {
-        return $"image-searcher-{item.Id}";
+        return $"image-searcher-{imageType}.{item.Id}";
     }
 }

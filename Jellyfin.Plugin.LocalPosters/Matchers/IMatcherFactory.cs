@@ -2,6 +2,7 @@ using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
 
@@ -18,8 +19,13 @@ public interface IMatcherFactory
     /// <summary>
     ///
     /// </summary>
+    HashSet<ImageType> SupportedImageTypes(BaseItem item);
+
+    /// <summary>
+    ///
+    /// </summary>
     /// <returns></returns>
-    IMatcher Create(BaseItem item);
+    IMatcher Create(ImageType imageType, BaseItem item);
 }
 
 /// <inheritdoc />
@@ -36,13 +42,43 @@ public class MatcherFactory : IMatcherFactory
 
     private static readonly HashSet<BaseItemKind> _kinds = [.._factories.Keys];
 
+    private static readonly HashSet<ImageType> _seriesImageTypes =
+        [ImageType.Primary, ImageType.Art, ImageType.Backdrop, ImageType.Thumb, ImageType.Banner];
+
+    private static readonly HashSet<ImageType> _moviesImageTypes =
+    [
+        ImageType.Primary,
+        ImageType.Thumb,
+        ImageType.Art,
+        ImageType.Logo,
+        ImageType.Disc,
+        ImageType.Banner,
+        ImageType.Backdrop
+    ];
+
     /// <inheritdoc />
     public HashSet<BaseItemKind> SupportedItemKinds => _kinds;
 
     /// <inheritdoc />
-    public IMatcher Create(BaseItem item)
+    public HashSet<ImageType> SupportedImageTypes(BaseItem item)
+    {
+        return item switch
+        {
+            Series => _seriesImageTypes,
+            Movie => _moviesImageTypes,
+            Season or Episode or BoxSet => [ImageType.Primary],
+            _ => throw new NotSupportedException("Not supported item kind")
+        };
+    }
+
+    /// <inheritdoc />
+    public IMatcher Create(ImageType imageType, BaseItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
+
+        if (imageType != ImageType.Primary)
+            return new ArtMatcher(item, imageType);
+
         if (!_factories.TryGetValue(item.GetBaseItemKind(), out var factory))
             throw new InvalidOperationException($"No factory registered for type {item.GetType()}");
 
