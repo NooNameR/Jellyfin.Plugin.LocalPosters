@@ -9,10 +9,10 @@ public class ArtMatcherTests
     [Fact]
     public void MatchSuccessfully()
     {
-        const int SeriesYear = 2016;
-        const string SeriesName = "Dexter";
+        const int SeriesYear = 2025;
+        const string SeriesName = "Daredevil: Born Again";
         var matcher = new ArtMatcher(SeriesName, SeriesYear, ImageType.Backdrop);
 
-        Assert.True(matcher.IsMatch("Dexter (2016) - Backdrop.jpg"));
+        Assert.True(matcher.IsMatch("Daredevil- Born Again (2025) - Backdrop.jpg"));
     }
 }

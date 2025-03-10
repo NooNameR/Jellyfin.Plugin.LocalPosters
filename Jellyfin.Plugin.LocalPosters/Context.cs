@@ -51,7 +51,7 @@ public class Context : DbContext
     //TODO: Remove this
     public void FixData(ILibraryManager manager)
     {
-        var records = Set<PosterRecord>().ToDictionary(x => x.ItemId);
+        var records = Set<PosterRecord>().Where(x => x.ImageType == ImageType.Primary).ToDictionary(x => x.ItemId);
         var count = manager.GetCount(new InternalItemsQuery());
         const int BatchSize = 5000;
 
