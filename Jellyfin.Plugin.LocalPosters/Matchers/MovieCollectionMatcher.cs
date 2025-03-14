@@ -14,6 +14,7 @@ public partial class MovieCollectionMatcher : IMatcher
     /// <param name="name"></param>
     public MovieCollectionMatcher(string name)
     {
+        SearchPattern = $"{name.SanitizeName("*")}*Collection*.*".Replace("**", "*", StringComparison.Ordinal);
         _name = name.SanitizeName();
     }
 
@@ -24,6 +25,9 @@ public partial class MovieCollectionMatcher : IMatcher
     public MovieCollectionMatcher(BoxSet collection) : this(collection.Name)
     {
     }
+
+    /// <inheritdoc />
+    public string SearchPattern { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)

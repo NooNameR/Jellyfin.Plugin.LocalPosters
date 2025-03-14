@@ -25,6 +25,7 @@ public partial class EpisodeMatcher : IMatcher
     public EpisodeMatcher(string seriesName, int? seriesProductionYear, int? seasonIndex, int? seasonProductionYear, int? episodeIndex,
         int? episodeProductionYear)
     {
+        SearchPattern = $"{seriesName.SanitizeName("*")}*S{_seasonIndex}*E{_episodeIndex}*.*".Replace("**", "*", StringComparison.Ordinal);
         _seriesName = seriesName.SanitizeName();
         _episodeIndex = episodeIndex;
         _seriesProductionYear = seriesProductionYear;
@@ -44,6 +45,9 @@ public partial class EpisodeMatcher : IMatcher
         episode.ProductionYear)
     {
     }
+
+    /// <inheritdoc />
+    public string SearchPattern { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)

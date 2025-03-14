@@ -9,7 +9,7 @@ public partial class MovieMatcher : IMatcher
     private readonly string _name;
     private readonly int? _premiereYear;
     private readonly int? _productionYear;
-    private readonly string[] _splitName;
+    private readonly string _splitName;
 
     /// <summary>
     ///
@@ -19,8 +19,9 @@ public partial class MovieMatcher : IMatcher
     /// <param name="premiereYear"></param>
     public MovieMatcher(string name, int? productionYear, int? premiereYear)
     {
+        _splitName = name.Split(":", StringSplitOptions.RemoveEmptyEntries)[0];
+        SearchPattern = $"{_splitName.SanitizeName("*")}*.*".Replace("**", "*", StringComparison.Ordinal);
         _name = name.SanitizeName();
-        _splitName = name.Split(":", StringSplitOptions.RemoveEmptyEntries);
         _productionYear = productionYear;
         _premiereYear = premiereYear;
     }
@@ -34,6 +35,9 @@ public partial class MovieMatcher : IMatcher
     }
 
     /// <inheritdoc />
+    public string SearchPattern { get; }
+
+    /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
         var match = MovieRegex().Match(fileName);
@@ -43,12 +47,7 @@ public partial class MovieMatcher : IMatcher
         var name = match.Groups[1].Value.SanitizeName();
         return (year == _productionYear || year == _premiereYear) &&
                (string.Equals(_name, name, StringComparison.OrdinalIgnoreCase) ||
-                IsPartialMatch(_splitName, name));
-    }
-
-    private static bool IsPartialMatch(string[] split, string fileName)
-    {
-        return split.Length > 1 && string.Equals(split[0], fileName, StringComparison.OrdinalIgnoreCase);
+                string.Equals(_splitName, name, StringComparison.OrdinalIgnoreCase));
     }
 
     [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]

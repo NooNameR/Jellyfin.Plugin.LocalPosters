@@ -16,6 +16,7 @@ public partial class SeriesMatcher : IMatcher
     /// <param name="productionYear"></param>
     public SeriesMatcher(string name, int? productionYear)
     {
+        SearchPattern = $"{name.SanitizeName("*")}*{_productionYear}*.*".Replace("**", "*", StringComparison.Ordinal);
         _name = name.SanitizeName();
         _productionYear = productionYear;
     }
@@ -27,6 +28,9 @@ public partial class SeriesMatcher : IMatcher
     public SeriesMatcher(Series series) : this(series.Name, series.ProductionYear)
     {
     }
+
+    /// <inheritdoc />
+    public string SearchPattern { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)

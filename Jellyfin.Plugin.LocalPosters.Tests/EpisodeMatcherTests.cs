@@ -33,7 +33,6 @@ public class EpisodeMatcherTests
         Assert.True(matcher.IsMatch("Dexter (2016) - S1 E2 .jpg"));
     }
 
-
     [Fact]
     public void MatchSuccessfullyWithoutYear()
     {

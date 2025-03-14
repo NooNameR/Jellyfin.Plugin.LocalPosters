@@ -23,6 +23,7 @@ public partial class SeasonMatcher : IMatcher
     public SeasonMatcher(string seriesName, int? seriesProductionYear, string seasonName, int? seasonIndex,
         int? seasonProductionYear)
     {
+        SearchPattern = $"{seriesName.SanitizeName("*")}*.*".Replace("**", "*", StringComparison.Ordinal);
         _seriesName = seriesName.SanitizeName();
         _seasonName = seasonName.SanitizeName();
         _seasonIndex = seasonIndex;
@@ -39,6 +40,11 @@ public partial class SeasonMatcher : IMatcher
         season.ProductionYear)
     {
     }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public string SearchPattern { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)

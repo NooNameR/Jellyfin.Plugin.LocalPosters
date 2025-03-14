@@ -12,6 +12,16 @@ namespace Jellyfin.Plugin.LocalPosters.Matchers;
 public class ImageSearcher : IImageSearcher
 {
     private static readonly Lazy<FileSystemMetadata> _emptyMetadata = new(() => new FileSystemMetadata { Exists = false });
+
+    private static readonly Lazy<EnumerationOptions> _enumerationOptions =
+        new(() => new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            MatchCasing = MatchCasing.CaseInsensitive,
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System | FileAttributes.Temporary
+        });
+
     private readonly PluginConfiguration _configuration;
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<ImageSearcher> _logger;
@@ -56,7 +66,13 @@ public class ImageSearcher : IImageSearcher
             if (string.IsNullOrEmpty(_configuration.Folders[i].LocalPath))
                 continue;
 
-            foreach (var file in _fileSystem.GetFiles(_configuration.Folders[i].LocalPath, true))
+            var folder = _fileSystem.GetDirectoryInfo(_configuration.Folders[i].LocalPath);
+
+            if (!folder.Exists || !folder.IsDirectory)
+                continue;
+
+            // TODO: this is a workaround while waiting for: https://github.com/jellyfin/jellyfin/pull/13691
+            foreach (var file in new DirectoryInfo(folder.FullName).EnumerateFiles(matcher.SearchPattern, _enumerationOptions.Value))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -69,7 +85,7 @@ public class ImageSearcher : IImageSearcher
 
                 _logger.LogMatched(imageType, item, file, sw.Elapsed);
 
-                return file;
+                return _fileSystem.GetFileInfo(file.FullName);
             }
         }
 

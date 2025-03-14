@@ -2,7 +2,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.LocalPosters.Logging;
@@ -79,7 +78,7 @@ public static class LoggerExtensions
     /// <param name="file"></param>
     /// <param name="imageType"></param>
     /// <param name="item"></param>
-    public static void LogMatching(this ILogger logger, FileSystemMetadata file, ImageType imageType, BaseItem item)
+    public static void LogMatching(this ILogger logger, FileInfo file, ImageType imageType, BaseItem item)
     {
         switch (item)
         {
@@ -117,7 +116,7 @@ public static class LoggerExtensions
     /// <param name="item"></param>
     /// <param name="file"></param>
     /// <param name="elapsedTime"></param>
-    public static void LogMatched(this ILogger logger, ImageType imageType, BaseItem item, FileSystemMetadata file, TimeSpan elapsedTime)
+    public static void LogMatched(this ILogger logger, ImageType imageType, BaseItem item, FileInfo file, TimeSpan elapsedTime)
     {
         switch (item)
         {

@@ -22,14 +22,15 @@ public static partial class StringExtensions
     ///
     /// </summary>
     /// <param name="input"></param>
+    /// <param name="replacement"></param>
     /// <returns></returns>
-    public static string SanitizeName(this string input)
+    public static string SanitizeName(this string input, string replacement = " ")
     {
         input = RemoveDiacritics(input);
 
         input = YearRegex().Replace(input, string.Empty);
-        input = SpecialCharsRegex().Replace(input, " ");
-        return SpacesRegex().Replace(input, " ").Trim();
+        input = SpecialCharsRegex().Replace(input, replacement);
+        return SpacesRegex().Replace(input, replacement).Trim();
     }
 
     private static string RemoveDiacritics(string text)
