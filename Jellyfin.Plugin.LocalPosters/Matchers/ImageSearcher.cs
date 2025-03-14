@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Jellyfin.Plugin.LocalPosters.Configuration;
 using Jellyfin.Plugin.LocalPosters.Logging;
 using MediaBrowser.Controller.Entities;
@@ -47,7 +48,9 @@ public class ImageSearcher : IImageSearcher
     /// <inheritdoc />
     public FileSystemMetadata Search(ImageType imageType, BaseItem item, CancellationToken cancellationToken)
     {
+        var sw = Stopwatch.StartNew();
         var matcher = _matcherFactory.Create(imageType, item);
+
         for (var i = 0; i < _configuration.Folders.Length; i++)
         {
             if (string.IsNullOrEmpty(_configuration.Folders[i].LocalPath))
@@ -64,13 +67,13 @@ public class ImageSearcher : IImageSearcher
                 if (!match)
                     continue;
 
-                _logger.LogMatched(imageType, item, file);
+                _logger.LogMatched(imageType, item, file, sw.Elapsed);
 
                 return file;
             }
         }
 
-        _logger.LogMissing(imageType, item);
+        _logger.LogMissing(imageType, item, sw.Elapsed);
 
         return _emptyMetadata.Value;
     }
