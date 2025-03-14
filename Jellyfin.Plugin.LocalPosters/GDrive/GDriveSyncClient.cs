@@ -1,7 +1,6 @@
 using Google.Apis.Drive.v3;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
-using File = Google.Apis.Drive.v3.Data.File;
 
 namespace Jellyfin.Plugin.LocalPosters.GDrive;
 
@@ -45,7 +44,7 @@ public sealed class GDriveSyncClient(
                 var request = driveService.Files.List();
                 request.Q =
                     $"'{q.Item1}' in parents and trashed=false and (mimeType contains 'image/' or mimeType='{FolderMimeType}')";
-                request.Fields = "nextPageToken, files(id, name, size, mimeType, modifiedTime)";
+                request.Fields = "nextPageToken, files(id, name, size, mimeType, md5Checksum, modifiedTime)";
                 request.PageSize = 1000;
 
                 do
@@ -86,7 +85,7 @@ public sealed class GDriveSyncClient(
             {
                 logger.LogDebug("Starting file: {FileId} download to: {Folder}", item.Item1, item.Item2.FullName);
 
-                await DownloadFile(logger, driveService, item.Item1, item.Item2, cancellationToken).ConfigureAwait(false);
+                await DownloadFile(driveService, item.Item1, item.Item2).ConfigureAwait(false);
                 logger.LogDebug("File: {FileId} download completed to: {Folder}", item.Item1, item.Item2.FullName);
             }
             catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
@@ -110,16 +109,34 @@ public sealed class GDriveSyncClient(
         progress.Report(100);
         return itemIds.Count;
 
-        static async Task DownloadFile(ILogger logger, DriveService service, string fileId,
-            FileSystemMetadata saveTo,
-            CancellationToken cancellationToken)
+        async Task DownloadFile(DriveService service, string fileId,
+            FileSystemMetadata saveTo)
         {
             var request = service.Files.Get(fileId);
-            await using var stream = new FileStream(saveTo.FullName, FileMode.Create, FileAccess.Write);
-            await request.DownloadAsync(stream, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await using var stream = new FileStream(saveTo.FullName, FileMode.Create, FileAccess.Write);
+                await request.DownloadAsync(stream, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                TryRemoveFile(saveTo);
+            }
         }
 
-        static bool ShouldDownload(FileSystemMetadata file, File driveFile)
+        static void TryRemoveFile(FileSystemMetadata file)
+        {
+            try
+            {
+                File.Delete(file.FullName);
+            }
+            catch
+            {
+                //ignore
+            }
+        }
+
+        static bool ShouldDownload(FileSystemMetadata file, Google.Apis.Drive.v3.Data.File driveFile)
         {
             return !file.Exists || file.Length != driveFile.Size || driveFile.ModifiedTimeDateTimeOffset > file.LastWriteTimeUtc;
         }
