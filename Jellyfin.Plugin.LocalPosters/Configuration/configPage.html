@@ -199,7 +199,7 @@
                 return;
             }
 
-            if (folderInput && !config.Folders.some(x => x.RemoteId === gDriveInput || x.LocalPath === folderInput)) {
+            if (folderInput && !config.Folders.some(x => (gDriveInput && x.RemoteId === gDriveInput) || x.LocalPath === folderInput)) {
                 config.Folders.push({RemoteId: gDriveInput, LocalPath: folderInput});
                 $('#newFolder').val('');
                 $('#newGDrive').val('');

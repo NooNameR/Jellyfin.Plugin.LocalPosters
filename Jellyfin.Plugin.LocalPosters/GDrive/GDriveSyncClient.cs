@@ -87,14 +87,16 @@ public sealed class GDriveSyncClient(
 
                 await DownloadFile(driveService, item.Item1, item.Item2).ConfigureAwait(false);
                 logger.LogDebug("File: {FileId} download completed to: {Folder}", item.Item1, item.Item2.FullName);
+                return true;
             }
             catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
             {
+                TryRemoveFile(item.Item2);
             }
             catch (Exception e)
             {
                 logger.LogWarning(e, "File: {FileId} download failed to: {Folder}", item.Item1, item.Item2.FullName);
-                throw;
+                TryRemoveFile(item.Item2);
             }
             finally
             {
@@ -102,26 +104,21 @@ public sealed class GDriveSyncClient(
 
                 progress.Report((Interlocked.Increment(ref completed) / (double)itemIds.Count) * 90.0);
             }
+
+            return false;
         }, cancellationToken));
 
-        await Task.WhenAll(tasks).ConfigureAwait(false);
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
         progress.Report(100);
-        return itemIds.Count;
+        return results.Count(x => x);
 
         async Task DownloadFile(DriveService service, string fileId,
             FileSystemMetadata saveTo)
         {
             var request = service.Files.Get(fileId);
-            try
-            {
-                await using var stream = new FileStream(saveTo.FullName, FileMode.Create, FileAccess.Write);
-                await request.DownloadAsync(stream, cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                TryRemoveFile(saveTo);
-            }
+            await using var stream = new FileStream(saveTo.FullName, FileMode.Create, FileAccess.Write);
+            await request.DownloadAsync(stream, cancellationToken).ConfigureAwait(false);
         }
 
         static void TryRemoveFile(FileSystemMetadata file)
