@@ -19,7 +19,7 @@ public partial class ArtMatcher : IMatcher
     /// <param name="imageType"></param>
     public ArtMatcher(string name, int? year, ImageType imageType)
     {
-        SearchPattern = $"{name.SanitizeName("*")}*{_year}*{imageType}*.*".Replace("**", "*", StringComparison.Ordinal);
+        SearchPattern = $"{name.SanitizeName("*")}*{year}*{imageType}*.*".Replace("**", "*", StringComparison.Ordinal);
         _name = name.SanitizeName();
         _year = year;
         _imageType = imageType;

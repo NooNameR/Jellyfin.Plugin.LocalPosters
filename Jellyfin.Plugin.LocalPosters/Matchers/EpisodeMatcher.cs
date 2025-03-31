@@ -25,7 +25,7 @@ public partial class EpisodeMatcher : IMatcher
     public EpisodeMatcher(string seriesName, int? seriesProductionYear, int? seasonIndex, int? seasonProductionYear, int? episodeIndex,
         int? episodeProductionYear)
     {
-        SearchPattern = $"{seriesName.SanitizeName("*")}*S{_seasonIndex}*E{_episodeIndex}*.*".Replace("**", "*", StringComparison.Ordinal);
+        SearchPattern = $"{seriesName.SanitizeName("*")}*S{seasonIndex}*E{episodeIndex}*.*".Replace("**", "*", StringComparison.Ordinal);
         _seriesName = seriesName.SanitizeName();
         _episodeIndex = episodeIndex;
         _seriesProductionYear = seriesProductionYear;

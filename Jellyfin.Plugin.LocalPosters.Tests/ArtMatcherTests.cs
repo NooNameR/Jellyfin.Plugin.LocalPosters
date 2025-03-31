@@ -4,17 +4,27 @@ using Xunit;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
-public class ArtMatcherTests
+public sealed class ArtMatcherTests : IDisposable
 {
+    const string Folder = "art-matchers";
+
     private readonly DirectoryInfo _folder;
 
     public ArtMatcherTests()
     {
-        var folder = "art-matchers";
-        if (!Directory.Exists(folder))
-            Directory.CreateDirectory(folder);
+        if (!Directory.Exists(Folder))
+            Directory.CreateDirectory(Folder);
 
-        _folder = new DirectoryInfo(folder);
+        _folder = new DirectoryInfo(Folder);
+    }
+
+#pragma warning disable CA1063
+#pragma warning disable CA1816
+    public void Dispose()
+#pragma warning restore CA1816
+#pragma warning restore CA1063
+    {
+        Directory.Delete(_folder.FullName, true);
     }
 
     [Fact]
@@ -40,12 +50,10 @@ public class ArtMatcherTests
         var filePath = Path.Combine(_folder.FullName, expectedFileName);
         await File.Create(filePath).DisposeAsync();
 
-        var files = new DirectoryInfo(_folder.FullName).EnumerateFiles(matcher.SearchPattern).ToArray();
+        var files = _folder.EnumerateFiles(matcher.SearchPattern).ToArray();
 
         Assert.Single(files);
 
         Assert.Equal(filePath, files[0].FullName);
-
-        File.Delete(filePath);
     }
 }

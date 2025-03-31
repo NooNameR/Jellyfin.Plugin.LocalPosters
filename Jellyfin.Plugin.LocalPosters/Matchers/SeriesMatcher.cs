@@ -16,7 +16,7 @@ public partial class SeriesMatcher : IMatcher
     /// <param name="productionYear"></param>
     public SeriesMatcher(string name, int? productionYear)
     {
-        SearchPattern = $"{name.SanitizeName("*")}*{_productionYear}*.*".Replace("**", "*", StringComparison.Ordinal);
+        SearchPattern = $"{name.SanitizeName("*")}*{productionYear}*.*".Replace("**", "*", StringComparison.Ordinal);
         _name = name.SanitizeName();
         _productionYear = productionYear;
     }
