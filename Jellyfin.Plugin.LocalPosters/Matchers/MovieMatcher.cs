@@ -6,22 +6,25 @@ namespace Jellyfin.Plugin.LocalPosters.Matchers;
 /// <inheritdoc />
 public partial class MovieMatcher : IMatcher
 {
-    private readonly string _name;
+    private readonly HashSet<string> _names;
     private readonly int? _premiereYear;
     private readonly int? _productionYear;
-    private readonly string _splitName;
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="name"></param>
+    /// <param name="originalName"></param>
     /// <param name="productionYear"></param>
     /// <param name="premiereYear"></param>
-    public MovieMatcher(string name, int? productionYear, int? premiereYear)
+    public MovieMatcher(string name, string originalName, int? productionYear, int? premiereYear)
     {
-        _splitName = name.Split(":", StringSplitOptions.RemoveEmptyEntries)[0];
-        SearchPattern = $"{_splitName.SanitizeName("*")}*.*".Replace("**", "*", StringComparison.Ordinal);
-        _name = name.SanitizeName();
+        var titles = new[] { name, originalName }.Where(x => !string.IsNullOrWhiteSpace(x)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var title in titles.ToList())
+            titles.Add(title.Split(":", StringSplitOptions.RemoveEmptyEntries)[0]);
+        SearchPatterns = titles.Select(x => $"{x.SanitizeName("*")}*.*".Replace("**", "*", StringComparison.Ordinal))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _names = titles.Select(x => x.SanitizeName()).ToHashSet(StringComparer.OrdinalIgnoreCase);
         _productionYear = productionYear;
         _premiereYear = premiereYear;
     }
@@ -30,12 +33,12 @@ public partial class MovieMatcher : IMatcher
     ///
     /// </summary>
     /// <param name="movie"></param>
-    public MovieMatcher(Movie movie) : this(movie.Name, movie.ProductionYear, movie.PremiereDate?.Year)
+    public MovieMatcher(Movie movie) : this(movie.Name, movie.OriginalTitle, movie.ProductionYear, movie.PremiereDate?.Year)
     {
     }
 
     /// <inheritdoc />
-    public string SearchPattern { get; }
+    public IReadOnlySet<string> SearchPatterns { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)
@@ -45,9 +48,7 @@ public partial class MovieMatcher : IMatcher
 
         if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
         var name = match.Groups[1].Value.SanitizeName();
-        return (year == _productionYear || year == _premiereYear) &&
-               (string.Equals(_name, name, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(_splitName, name, StringComparison.OrdinalIgnoreCase));
+        return (year == _productionYear || year == _premiereYear) && _names.Contains(name);
     }
 
     [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]

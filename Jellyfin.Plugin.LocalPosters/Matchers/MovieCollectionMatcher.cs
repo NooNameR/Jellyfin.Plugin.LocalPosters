@@ -6,34 +6,41 @@ namespace Jellyfin.Plugin.LocalPosters.Matchers;
 /// <inheritdoc />
 public partial class MovieCollectionMatcher : IMatcher
 {
-    private readonly string _name;
+    private readonly HashSet<string> _names;
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="name"></param>
-    public MovieCollectionMatcher(string name)
+    /// <param name="originalName"></param>
+    public MovieCollectionMatcher(string name, string originalName)
     {
-        SearchPattern = $"{name.SanitizeName("*")}*Collection*.*".Replace("**", "*", StringComparison.Ordinal);
-        _name = name.SanitizeName();
+        var titles = new[] { name, originalName }.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+        SearchPatterns = titles.Select(x => $"{x.SanitizeName("*")}*Collection*.*".Replace("**", "*", StringComparison.Ordinal))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _names = titles.Select(x => x.SanitizeName()).ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="collection"></param>
-    public MovieCollectionMatcher(BoxSet collection) : this(collection.Name)
+    public MovieCollectionMatcher(BoxSet collection) : this(collection.Name, collection.OriginalTitle)
     {
     }
 
     /// <inheritdoc />
-    public string SearchPattern { get; }
+    public IReadOnlySet<string> SearchPatterns { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
+        if (_names.Count == 0)
+            return false;
+
         var match = CollectionRegex().Match(fileName);
-        return match.Success && string.Equals(_name, match.Groups[1].Value.SanitizeName(), StringComparison.OrdinalIgnoreCase);
+        var name = match.Groups[1].Value.SanitizeName();
+        return match.Success && _names.Contains(name);
     }
 
     [GeneratedRegex(@"^(.*? Collection)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]

@@ -32,7 +32,8 @@ public sealed class ArtMatcherTests : IDisposable
     {
         const int SeriesYear = 2025;
         const string SeriesName = "Daredevil: Born Again";
-        var matcher = new ArtMatcher(SeriesName, SeriesYear, ImageType.Backdrop);
+        const string OriginalName = "Daredevil: Born Again";
+        var matcher = new ArtMatcher(SeriesName, OriginalName, SeriesYear, ImageType.Backdrop);
 
         Assert.True(matcher.IsMatch("Daredevil- Born Again (2025) - Backdrop.jpg"));
     }
@@ -42,18 +43,26 @@ public sealed class ArtMatcherTests : IDisposable
     {
         const int Year = 2013;
         const string MovieName = "2 Guns";
+        const string OriginalName = "2 Guns";
 
         var expectedFileName = "2 Guns (2013) - Backdrop.jpg";
 
-        var matcher = new ArtMatcher(MovieName, Year, ImageType.Backdrop);
+        var matcher = new ArtMatcher(MovieName, OriginalName, Year, ImageType.Backdrop);
 
         var filePath = Path.Combine(_folder.FullName, expectedFileName);
         await File.Create(filePath).DisposeAsync();
 
-        var files = _folder.EnumerateFiles(matcher.SearchPattern).ToArray();
+        foreach (var searchPattern in matcher.SearchPatterns)
+        {
+            var files = _folder.EnumerateFiles(searchPattern).ToArray();
 
-        Assert.Single(files);
+            Assert.Single(files);
 
-        Assert.Equal(filePath, files[0].FullName);
+            Assert.Equal(filePath, files[0].FullName);
+
+            return;
+        }
+
+        Assert.Fail();
     }
 }

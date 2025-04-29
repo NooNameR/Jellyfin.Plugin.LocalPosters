@@ -11,7 +11,7 @@ public class SeriesMatcherTests
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter: Original Sins";
 
-        var matcher = new SeriesMatcher(SeriesName, SeriesYear);
+        var matcher = new SeriesMatcher(SeriesName, SeriesName, SeriesYear);
 
         Assert.True(matcher.IsMatch("Dexter Original Sins (2016).jpg"));
     }
@@ -22,7 +22,7 @@ public class SeriesMatcherTests
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter: Original Sins";
 
-        var matcher = new SeriesMatcher(SeriesName, SeriesYear);
+        var matcher = new SeriesMatcher(SeriesName, SeriesName, SeriesYear);
 
         Assert.True(matcher.IsMatch("Dexter Original Sins (2016) .jpg"));
     }
@@ -32,9 +32,9 @@ public class SeriesMatcherTests
     public void MatchContainingYearInNameSuccessfully()
     {
         const int SeriesYear = 2016;
-        string movieName = $"Dexter: Original Sins ({SeriesYear})";
+        string seriesName = $"Dexter: Original Sins ({SeriesYear})";
 
-        var matcher = new SeriesMatcher(movieName, SeriesYear);
+        var matcher = new SeriesMatcher(seriesName, seriesName, SeriesYear);
 
         Assert.True(matcher.IsMatch("Dexter Original Sins (2016).jpg"));
     }
@@ -49,7 +49,7 @@ public class SeriesMatcherTests
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter: Original Sins";
 
-        var matcher = new SeriesMatcher(SeriesName, SeriesYear);
+        var matcher = new SeriesMatcher(SeriesName, SeriesName, SeriesYear);
 
         Assert.True(matcher.IsMatch($"Dexter{symbol} Original Sins (2016).jpg"));
     }

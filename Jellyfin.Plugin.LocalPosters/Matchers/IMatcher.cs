@@ -8,7 +8,7 @@ public interface IMatcher
     /// <summary>
     ///
     /// </summary>
-    string SearchPattern { get; }
+    IReadOnlySet<string> SearchPatterns { get; }
 
     /// <summary>
     ///

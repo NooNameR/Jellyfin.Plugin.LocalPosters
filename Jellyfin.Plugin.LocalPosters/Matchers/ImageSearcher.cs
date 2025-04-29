@@ -72,20 +72,23 @@ public class ImageSearcher : IImageSearcher
                 continue;
 
             // TODO: this is a workaround while waiting for: https://github.com/jellyfin/jellyfin/pull/13691
-            foreach (var file in new DirectoryInfo(folder.FullName).EnumerateFiles(matcher.SearchPattern, _enumerationOptions.Value))
+            foreach (var searchPattern in matcher.SearchPatterns)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                foreach (var file in new DirectoryInfo(folder.FullName).EnumerateFiles(searchPattern, _enumerationOptions.Value))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                _logger.LogMatching(file, imageType, item);
+                    _logger.LogMatching(file, imageType, item);
 
-                var match = matcher.IsMatch(file.Name);
+                    var match = matcher.IsMatch(file.Name);
 
-                if (!match)
-                    continue;
+                    if (!match)
+                        continue;
 
-                _logger.LogMatched(imageType, item, file, sw.Elapsed);
+                    _logger.LogMatched(imageType, item, file, sw.Elapsed);
 
-                return _fileSystem.GetFileInfo(file.FullName);
+                    return _fileSystem.GetFileInfo(file.FullName);
+                }
             }
         }
 

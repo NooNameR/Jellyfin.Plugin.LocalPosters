@@ -10,23 +10,28 @@ public partial class EpisodeMatcher : IMatcher
     private readonly int? _episodeProductionYear;
     private readonly int? _seasonIndex;
     private readonly int? _seasonProductionYear;
-    private readonly string _seriesName;
+    private readonly HashSet<string> _seriesNames;
     private readonly int? _seriesProductionYear;
 
     /// <summary>
     ///
     /// </summary>
     /// <param name="seriesName"></param>
+    /// <param name="originalName"></param>
     /// <param name="seriesProductionYear"></param>
     /// <param name="seasonIndex"></param>
     /// <param name="seasonProductionYear"></param>
     /// <param name="episodeIndex"></param>
     /// <param name="episodeProductionYear"></param>
-    public EpisodeMatcher(string seriesName, int? seriesProductionYear, int? seasonIndex, int? seasonProductionYear, int? episodeIndex,
+    public EpisodeMatcher(string seriesName, string originalName, int? seriesProductionYear, int? seasonIndex, int? seasonProductionYear,
+        int? episodeIndex,
         int? episodeProductionYear)
     {
-        SearchPattern = $"{seriesName.SanitizeName("*")}*S{seasonIndex}*E{episodeIndex}*.*".Replace("**", "*", StringComparison.Ordinal);
-        _seriesName = seriesName.SanitizeName();
+        var titles = new[] { seriesName, originalName }.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+        SearchPatterns = new[] { seriesName, originalName }.Select(x =>
+                $"{x.SanitizeName("*")}*S{seasonIndex}*E{episodeIndex}*.*".Replace("**", "*", StringComparison.Ordinal))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _seriesNames = titles.Select(x => x.SanitizeName()).ToHashSet(StringComparer.OrdinalIgnoreCase);
         _episodeIndex = episodeIndex;
         _seriesProductionYear = seriesProductionYear;
         _seasonIndex = seasonIndex;
@@ -38,7 +43,8 @@ public partial class EpisodeMatcher : IMatcher
     ///
     /// </summary>
     /// <param name="episode"></param>
-    public EpisodeMatcher(Episode episode) : this(episode.Series?.Name ?? string.Empty, episode.Series?.ProductionYear,
+    public EpisodeMatcher(Episode episode) : this(episode.Series?.Name ?? string.Empty, episode.Series?.OriginalTitle ?? string.Empty,
+        episode.Series?.ProductionYear,
         episode.Season.IndexNumber,
         episode.Season.ProductionYear,
         episode.IndexNumber,
@@ -47,12 +53,12 @@ public partial class EpisodeMatcher : IMatcher
     }
 
     /// <inheritdoc />
-    public string SearchPattern { get; }
+    public IReadOnlySet<string> SearchPatterns { get; }
 
     /// <inheritdoc />
     public bool IsMatch(string fileName)
     {
-        if (string.IsNullOrEmpty(_seriesName))
+        if (_seriesNames.Count == 0)
             return false;
 
         var match = EpisodeRegex().Match(fileName);
@@ -60,9 +66,10 @@ public partial class EpisodeMatcher : IMatcher
 
         if (!int.TryParse(match.Groups[3].Value, out var season)) return false;
         if (!int.TryParse(match.Groups[4].Value, out var episode)) return false;
+        var seriesName = match.Groups[1].Value.SanitizeName();
 
         return IsYearMatch(match.Groups[2].Value) &&
-               string.Equals(_seriesName, match.Groups[1].Value.SanitizeName(), StringComparison.OrdinalIgnoreCase) &&
+               _seriesNames.Contains(seriesName) &&
                _seasonIndex == season && _episodeIndex == episode;
     }
 

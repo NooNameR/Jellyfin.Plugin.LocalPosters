@@ -11,10 +11,11 @@ public class EpisodeMatcherTests
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter";
+        const string OriginalName = SeriesName;
         const int SeasonIndex = 1;
         const int EpisodeIndex = 2;
         const int EpisodeYear = 2018;
-        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(SeriesName, OriginalName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - S1 E2.jpg"));
     }
@@ -25,10 +26,11 @@ public class EpisodeMatcherTests
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter";
+        const string OriginalName = SeriesName;
         const int SeasonIndex = 1;
         const int EpisodeIndex = 2;
         const int EpisodeYear = 2018;
-        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(SeriesName, OriginalName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - S1 E2 .jpg"));
     }
@@ -39,10 +41,11 @@ public class EpisodeMatcherTests
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter";
+        const string OriginalName = SeriesName;
         const int SeasonIndex = 1;
         const int EpisodeIndex = 2;
         const int EpisodeYear = 2018;
-        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(SeriesName, OriginalName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter - S1 E2.jpg"));
     }
@@ -53,10 +56,11 @@ public class EpisodeMatcherTests
         const int SeasonYear = 2017;
         const int SeriesYear = 2016;
         const string SeriesName = "Dexter";
+        const string OriginalName = SeriesName;
         const int SeasonIndex = 1;
         const int EpisodeIndex = 12;
         const int EpisodeYear = 2018;
-        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(SeriesName, OriginalName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - S01 E12.jpg"));
     }
@@ -71,7 +75,7 @@ public class EpisodeMatcherTests
         const int EpisodeYear = 2018;
         string seriesName = $"Dexter ({SeriesYear})";
 
-        var matcher = new EpisodeMatcher(seriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(seriesName, seriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - S01 E12.jpg"));
     }
@@ -86,7 +90,7 @@ public class EpisodeMatcherTests
         const int EpisodeYear = 2018;
         string seriesName = $"Dexter ({SeasonYear})";
 
-        var matcher = new EpisodeMatcher(seriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(seriesName, seriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter (2016) - S01 E12.jpg"));
     }
@@ -100,8 +104,9 @@ public class EpisodeMatcherTests
         const int EpisodeIndex = 12;
         const int EpisodeYear = 2018;
         const string SeriesName = "Dexter";
+        const string OriginalName = SeriesName;
 
-        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(SeriesName, OriginalName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch("Dexter (2018) - S01 E12.jpg"));
     }
@@ -118,8 +123,9 @@ public class EpisodeMatcherTests
         const int EpisodeIndex = 12;
         const int EpisodeYear = 2018;
         const string SeriesName = "Dexter: New Blood";
+        const string OriginalName = "Dexter: New Blood";
 
-        var matcher = new EpisodeMatcher(SeriesName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
+        var matcher = new EpisodeMatcher(SeriesName, OriginalName, SeriesYear, SeasonIndex, SeasonYear, EpisodeIndex, EpisodeYear);
 
         Assert.True(matcher.IsMatch($"Dexter{symbol} new Blood (2016) - S1 E12.jpg"));
     }

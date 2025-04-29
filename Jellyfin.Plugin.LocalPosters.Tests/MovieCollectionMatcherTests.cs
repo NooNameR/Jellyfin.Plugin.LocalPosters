@@ -10,7 +10,7 @@ public class MovieCollectionMatcherTests
     {
         const string CollectionName = "Aquaman Collection";
 
-        var matcher = new MovieCollectionMatcher(CollectionName);
+        var matcher = new MovieCollectionMatcher(CollectionName, CollectionName);
 
         Assert.True(matcher.IsMatch("Aquaman Collection.jpg"));
     }
@@ -20,7 +20,7 @@ public class MovieCollectionMatcherTests
     {
         const string CollectionName = "Aquaman Collection";
 
-        var matcher = new MovieCollectionMatcher(CollectionName);
+        var matcher = new MovieCollectionMatcher(CollectionName, CollectionName);
 
         Assert.True(matcher.IsMatch("Aquaman Collection .jpg"));
     }

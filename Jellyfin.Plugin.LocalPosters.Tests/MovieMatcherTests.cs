@@ -12,7 +12,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2016;
         const string MovieName = "Dune: Part One";
 
-        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Dune: Part One (2016).jpg"));
     }
@@ -24,7 +24,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2016;
         const string MovieName = "Dune: Part One";
 
-        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Dune: Part One (2016) .jpg"));
     }
@@ -37,7 +37,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2019;
         const string MovieName = "Pokémon Detective Pikachu (2019)";
 
-        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Pokemon detective pikachu (2019).jpg"));
     }
@@ -49,7 +49,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2017;
         const string MovieName = "Dune: Part One";
 
-        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Dune: Part One (2017).jpg"));
     }
@@ -61,7 +61,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2016;
         string movieName = $"Dune: Part One ({MovieYear})";
 
-        var matcher = new MovieMatcher(movieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(movieName, movieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Dune: Part One (2016).jpg"));
     }
@@ -73,7 +73,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2018;
         string movieName = $"Dune: Part One ({PremiereYear})";
 
-        var matcher = new MovieMatcher(movieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(movieName, movieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Dune: Part One (2016).jpg"));
     }
@@ -85,7 +85,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2016;
         const string MovieName = "Dune: Part One";
 
-        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch("Dune (2016).jpg"));
     }
@@ -101,7 +101,7 @@ public class MovieMatcherTests
         const int PremiereYear = 2016;
         const string MovieName = "Dune: Part One";
 
-        var matcher = new MovieMatcher(MovieName, MovieYear, PremiereYear);
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
 
         Assert.True(matcher.IsMatch($"Dune{symbol} Part One (2016).jpg"));
     }
