@@ -51,18 +51,18 @@ Additionally, you can modify poster borders using the **border replacer** featur
 
 ### Creating Client Secrets for GDrive Integration
 To enable GDrive integration with `./auth/drive.file` scope:
-0. Make sure [Known Proxy](https://jellyfin.org/docs/general/post-install/networking/#known-proxies) is set correctly before proceeding (Google unlikely to give refresh token to localhost)
-1. **Google Cloud Console:** [console.cloud.google.com](https://console.cloud.google.com/)
-2. **Create Project:** Click project dropdown, select **New Project**, and name it.
-3. **Enable Google Drive API:** Navigate to **APIs & Services > Library** and enable **Google Drive API**.
-4. **Create OAuth 2.0 Credentials:**
+1. Make sure [Known Proxy](https://jellyfin.org/docs/general/post-install/networking/#known-proxies) is set correctly before proceeding (Google unlikely to give refresh token to localhost)
+2. **Google Cloud Console:** [console.cloud.google.com](https://console.cloud.google.com/)
+3. **Create Project:** Click project dropdown, select **New Project**, and name it.
+4. **Enable Google Drive API:** Navigate to **APIs & Services > Library** and enable **Google Drive API**.
+5. **Create OAuth 2.0 Credentials:**
     - Under **APIs & Services > Credentials**, create **OAuth client ID**.
     - Configure consent screen (**External**, add app name, save).
     - Set **Authorized Redirect URI**: `{YOUR_JELLYFIN_ADDRESS}/LocalPosters/GoogleAuthorization/Callback`. NOTE: if you are using different addresses for local and external network you have to add both addresses. Make sure you initiate authorization from the whitelisted base address
     - Select **Web application**, download `client_secrets.json`.
-5. **Set Scopes:** Add `https://www.googleapis.com/auth/drive.file`.
-6. **Publish Application:** Publish the OAuth consent screen for external access. Please note if you use "Test Audience" refresh token will expire withing 7 days, with current scope application won't require "Verification"
-7. **Upload Client Secrets:** Place `client_secrets.json` into directory visible for Jellyfin and change Plugin configuration accordingly.
+6. **Set Scopes:** Add `https://www.googleapis.com/auth/drive.file`.
+7. **Publish Application:** Publish the OAuth consent screen for external access. Please note if you use "Test Audience" refresh token will expire withing 7 days, with current scope application won't require "Verification"
+8. **Upload Client Secrets:** Place `client_secrets.json` into directory visible for Jellyfin and change Plugin configuration accordingly.
 
 Once configuration is done, plugin will keep syncing folders and searching for missing images in the selected libraries, no manual interaction is required! 😊
 
