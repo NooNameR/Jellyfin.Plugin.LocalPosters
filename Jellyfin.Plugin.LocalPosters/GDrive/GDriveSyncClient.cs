@@ -26,7 +26,7 @@ public sealed class GDriveSyncClient(
     public async Task<long> SyncAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var itemIds = new List<(string, FileSystemMetadata)>();
-
+        var filesToRemove = new List<FileSystemMetadata>();
         await limiter.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         var driveService = await driveServiceProvider.Provide(cancellationToken).ConfigureAwait(false);
@@ -47,6 +47,8 @@ public sealed class GDriveSyncClient(
                 request.Fields = "nextPageToken, files(id, name, size, mimeType, md5Checksum, modifiedTime)";
                 request.PageSize = 1000;
 
+                var filesInGDrive = new HashSet<string>();
+
                 do
                 {
                     var result = await request.ExecuteAsync(cancellationToken).ConfigureAwait(false);
@@ -61,10 +63,14 @@ public sealed class GDriveSyncClient(
                             queue.Enqueue((file.Id, filePath));
                         else if (ShouldDownload(filePath, file))
                             itemIds.Add((file.Id, filePath));
+
+                        filesInGDrive.Add(filePath.FullName);
                     }
 
                     request.PageToken = result.NextPageToken;
                 } while (!string.IsNullOrEmpty(request.PageToken));
+
+                filesToRemove.AddRange(fileSystem.GetFiles(folder.FullName).Where(file => !filesInGDrive.Contains(file.FullName)));
             }
         }
         finally
@@ -110,7 +116,13 @@ public sealed class GDriveSyncClient(
 
         var results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
+        logger.LogInformation("Removing {Count} files which are not longer on GDrive.", filesToRemove.Count);
+
+        foreach (var file in filesToRemove)
+            TryRemoveFile(file);
+
         progress.Report(100);
+
         return results.Count(x => x);
 
         async Task DownloadFile(DriveService service, string fileId,
