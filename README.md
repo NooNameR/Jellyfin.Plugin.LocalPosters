@@ -51,6 +51,7 @@ Additionally, you can modify poster borders using the **border replacer** featur
 
 ### Creating Client Secrets for GDrive Integration
 To enable GDrive integration with `./auth/drive.file` scope:
+0. Make sure [Known Proxy](https://jellyfin.org/docs/general/post-install/networking/#known-proxies) is set correctly before proceeding (Google unlikely to give refresh token to localhost)
 1. **Google Cloud Console:** [console.cloud.google.com](https://console.cloud.google.com/)
 2. **Create Project:** Click project dropdown, select **New Project**, and name it.
 3. **Enable Google Drive API:** Navigate to **APIs & Services > Library** and enable **Google Drive API**.
