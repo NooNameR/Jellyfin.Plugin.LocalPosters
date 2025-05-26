@@ -71,29 +71,54 @@ public class ImageSearcher : IImageSearcher
             if (!folder.Exists || !folder.IsDirectory)
                 continue;
 
-            // TODO: this is a workaround while waiting for: https://github.com/jellyfin/jellyfin/pull/13691
+            // Search for provider id patterns first
+            foreach (var searchPattern in GetProviderIdSearchPatterns(item))
+                if (FileSystemMetadata(folder, searchPattern, out var fileInfo))
+                    return fileInfo;
+
             foreach (var searchPattern in matcher.SearchPatterns)
-            {
-                foreach (var file in new DirectoryInfo(folder.FullName).EnumerateFiles(searchPattern, _enumerationOptions.Value))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    _logger.LogMatching(file, imageType, item);
-
-                    var match = matcher.IsMatch(file.Name);
-
-                    if (!match)
-                        continue;
-
-                    _logger.LogMatched(imageType, item, file, sw.Elapsed);
-
-                    return _fileSystem.GetFileInfo(file.FullName);
-                }
-            }
+                if (FileSystemMetadata(folder, searchPattern, out var fileInfo))
+                    return fileInfo;
         }
 
         _logger.LogMissing(imageType, item, sw.Elapsed);
 
         return _emptyMetadata.Value;
+
+        bool FileSystemMetadata(FileSystemMetadata folder, string searchPattern, out FileSystemMetadata fileInfo)
+        {
+            // TODO: this is a workaround while waiting for: https://github.com/jellyfin/jellyfin/pull/13691
+            foreach (var file in new DirectoryInfo(folder.FullName).EnumerateFiles(searchPattern, _enumerationOptions.Value))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                _logger.LogMatching(file, imageType, item);
+
+                var match = matcher.IsMatch(file.Name);
+
+                if (!match)
+                    continue;
+
+                _logger.LogMatched(imageType, item, file, sw.Elapsed);
+
+                fileInfo = _fileSystem.GetFileInfo(file.FullName);
+                return true;
+            }
+
+            fileInfo = _emptyMetadata.Value;
+            return false;
+        }
+    }
+
+    private static IEnumerable<string> GetProviderIdSearchPatterns(BaseItem item)
+    {
+        if (item.TryGetProviderId(MetadataProvider.Tmdb, out var id))
+            yield return $"*tmdb-{id}*.*";
+
+        if (item.TryGetProviderId(MetadataProvider.Imdb, out id))
+            yield return $"*imdb-{id}*.*";
+
+        if (item.TryGetProviderId(MetadataProvider.Tvdb, out id))
+            yield return $"*tvdb-{id}*.*";
     }
 }
