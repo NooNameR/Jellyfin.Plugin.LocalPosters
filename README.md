@@ -8,11 +8,11 @@ Inspired by: https://github.com/Drazzilb08/daps (So make sure to check the proje
 Filename formats from [MediUX](https://mediux.pro/) or [TPDb](https://theposterdb.com/)
 
 Media Types:
-- `Movie`
-- `BoxSet`
-- `Series`
-- `Season`
-- `Episode`
+- `Movie`: you can test filename with: https://regex101.com/r/WwQIOJ/1 (make sure it matches jellyfin item metadata)
+- `BoxSet`: you can test filename with: https://regex101.com/r/9kPyq5/1 (make sure it matches jellyfin item metadata)
+- `Series`: you can test filename with: https://regex101.com/r/DQSHJF/2 (make sure it matches jellyfin item metadata)
+- `Season`: you can test filename with: https://regex101.com/r/RTYOdo/2 (make sure it matches jellyfin item metadata)
+- `Episode`: you can test filename with: https://regex101.com/r/oaKoZq/2 (make sure it matches jellyfin item metadata)
 
 ## Features
 
