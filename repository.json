@@ -8,6 +8,14 @@
     "owner": "jellyfin",
     "versions": [
       {
+        "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.1.1.0...0.1.1.1",
+        "checksum": "59e011fe91cf5f9a211fbf25f6937486",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.1.1.1/local-posters_0.1.1.0.zip",
+        "targetAbi": "10.10.6.0",
+        "timestamp": "2025-05-26T12:58:54Z",
+        "version": "0.1.1.0"
+      },
+      {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.1.0.0...0.1.1.0",
         "checksum": "18de2c691c5ed1a36d4e517bc7fa52cd",
         "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.1.1.0/local-posters_0.1.1.0.zip",
@@ -238,14 +246,6 @@
         "targetAbi": "10.10.0.0",
         "timestamp": "2025-02-11T11:32:47Z",
         "version": "0.0.3.4"
-      },
-      {
-        "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.3.1...0.0.3.3",
-        "checksum": "f833c1d0596ab845b0e04deeb7c4ba1a",
-        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.3.3/local-posters_0.0.3.3.zip",
-        "targetAbi": "10.10.0.0",
-        "timestamp": "2025-02-11T11:10:56Z",
-        "version": "0.0.3.3"
       }
     ]
   }
