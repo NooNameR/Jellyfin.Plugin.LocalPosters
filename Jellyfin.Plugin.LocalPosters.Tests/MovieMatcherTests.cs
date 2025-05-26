@@ -18,6 +18,18 @@ public class MovieMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithProviderId()
+    {
+        const int MovieYear = 2016;
+        const int PremiereYear = 2016;
+        const string MovieName = "Dune: Part One";
+
+        var matcher = new MovieMatcher(MovieName, MovieName, MovieYear, PremiereYear);
+
+        Assert.True(matcher.IsMatch("Dune: Part One (2016) {tmdb-random} {imdb-random}.jpg"));
+    }
+
+    [Fact]
     public void MatchSuccessfullyWithWhitespaceBeforeExtensions()
     {
         const int MovieYear = 2016;

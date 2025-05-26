@@ -17,6 +17,17 @@ public class SeriesMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithProviderId()
+    {
+        const int SeriesYear = 2016;
+        const string SeriesName = "Dexter: Original Sins";
+
+        var matcher = new SeriesMatcher(SeriesName, SeriesName, SeriesYear);
+
+        Assert.True(matcher.IsMatch("Dexter Original Sins (2016) {tmdb-random} {tvdb-random} {imdb-random}.jpg"));
+    }
+
+    [Fact]
     public void MatchSuccessfullyWithWhitespaceBeforeExtensions()
     {
         const int SeriesYear = 2016;

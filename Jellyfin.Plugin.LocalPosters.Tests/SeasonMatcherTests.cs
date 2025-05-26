@@ -71,7 +71,7 @@ public class SeasonMatcherTests
     }
 
     [Fact]
-    public void MatchSuccessfullyNewFormat()
+    public void MatchSuccessfullyWithProviderId()
     {
         const int SeasonYear = 2017;
         const int SeriesYear = 2008;

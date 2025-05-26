@@ -39,6 +39,17 @@ public sealed class ArtMatcherTests : IDisposable
     }
 
     [Fact]
+    public void MatchSuccessfullyWithProviderId()
+    {
+        const int SeriesYear = 2025;
+        const string SeriesName = "Daredevil: Born Again";
+        const string OriginalName = "Daredevil: Born Again";
+        var matcher = new ArtMatcher(SeriesName, OriginalName, SeriesYear, ImageType.Backdrop);
+
+        Assert.True(matcher.IsMatch("Daredevil- Born Again (2025) {tmdb-random} {imdb-random} - Backdrop.jpg"));
+    }
+
+    [Fact]
     public async Task SearchPatternWorksWell()
     {
         const int Year = 2013;

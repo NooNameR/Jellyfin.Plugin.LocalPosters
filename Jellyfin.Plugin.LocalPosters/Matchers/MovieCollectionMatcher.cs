@@ -43,6 +43,6 @@ public partial class MovieCollectionMatcher : IMatcher
         return match.Success && _names.Contains(name);
     }
 
-    [GeneratedRegex(@"^(.*? Collection)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*? Collection)(?:\s*\{[^}]+\})*\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex CollectionRegex();
 }

@@ -16,6 +16,16 @@ public class MovieCollectionMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyWithTmdb()
+    {
+        const string CollectionName = "Aquaman Collection";
+
+        var matcher = new MovieCollectionMatcher(CollectionName, CollectionName);
+
+        Assert.True(matcher.IsMatch("Aquaman Collection {tmdb-random}.jpg"));
+    }
+
+    [Fact]
     public void MatchSuccessfullyWithWhitespaceBeforeExtensions()
     {
         const string CollectionName = "Aquaman Collection";
