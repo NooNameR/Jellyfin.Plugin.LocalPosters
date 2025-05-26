@@ -71,6 +71,19 @@ public class SeasonMatcherTests
     }
 
     [Fact]
+    public void MatchSuccessfullyNewFormat()
+    {
+        const int SeasonYear = 2017;
+        const int SeriesYear = 2008;
+        const string SeriesName = "Star Wars The Clone Wars";
+        const string SeasonName = "Season 1";
+        const int SeasonIndex = 1;
+        var matcher = new SeasonMatcher(SeriesName, SeriesName, SeriesYear, SeasonName, SeasonIndex, SeasonYear);
+
+        Assert.True(matcher.IsMatch("Star Wars The Clone Wars (2008) {tmdb-4194} {tvdb-83268} {imdb-tt0458290} - Season 1.jpg"));
+    }
+
+    [Fact]
     public void MatchContainingSeriesYearInNameSuccessfully()
     {
         const int SeasonYear = 2017;

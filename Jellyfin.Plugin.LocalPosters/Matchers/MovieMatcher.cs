@@ -51,6 +51,6 @@ public partial class MovieMatcher : IMatcher
         return (year == _productionYear || year == _premiereYear) && _names.Contains(name);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(?:\s*\{[^}]+\})*\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex MovieRegex();
 }

@@ -57,6 +57,6 @@ public partial class ArtMatcher : IMatcher
         return year == _year && imageType == _imageType && _names.Contains(name);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*-\s*([a-z]+)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(?:\s*\{[^}]+\})*\s*-\s*([A-Za-z]+)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex ArtRegex();
 }

@@ -49,6 +49,6 @@ public partial class SeriesMatcher : IMatcher
                _names.Contains(match.Groups[1].Value.SanitizeName());
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(?:\s*\{[^}]+\})*\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex SeasonRegex();
 }
