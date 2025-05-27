@@ -110,15 +110,15 @@ public class ImageSearcher : IImageSearcher
         }
     }
 
-    private static IEnumerable<string> GetProviderIdSearchPatterns(BaseItem item)
+    private IEnumerable<string> GetProviderIdSearchPatterns(BaseItem item)
     {
         if (item.TryGetProviderId(MetadataProvider.Tmdb, out var id) && !string.IsNullOrWhiteSpace(id))
-            yield return $"*{{tmdb-{id}}}*.*";
+            yield return $"*tmdb-{id.SanitizeSpecialChars()}*.*";
 
         if (item.TryGetProviderId(MetadataProvider.Imdb, out id) && !string.IsNullOrWhiteSpace(id))
-            yield return $"*{{imdb-{id}}}*.*";
+            yield return $"*imdb-{id.SanitizeSpecialChars()}*.*";
 
         if (item.TryGetProviderId(MetadataProvider.Tvdb, out id) && !string.IsNullOrWhiteSpace(id))
-            yield return $"*{{tvdb-{id}}}*.*";
+            yield return $"*tvdb-{id.SanitizeSpecialChars()}*.*";
     }
 }

@@ -29,8 +29,13 @@ public static partial class StringExtensions
         input = RemoveDiacritics(input);
 
         input = YearRegex().Replace(input, string.Empty);
-        input = SpecialCharsRegex().Replace(input, replacement);
+        input = SanitizeSpecialChars(input, replacement);
         return SpacesRegex().Replace(input, replacement).Trim();
+    }
+
+    public static string SanitizeSpecialChars(this string input, string replacement = "")
+    {
+        return SpecialCharsRegex().Replace(input, replacement);
     }
 
     private static string RemoveDiacritics(string text)
