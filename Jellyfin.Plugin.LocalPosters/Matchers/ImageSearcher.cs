@@ -112,13 +112,13 @@ public class ImageSearcher : IImageSearcher
 
     private static IEnumerable<string> GetProviderIdSearchPatterns(BaseItem item)
     {
-        if (item.TryGetProviderId(MetadataProvider.Tmdb, out var id))
-            yield return $"*tmdb-{id}*.*";
+        if (item.TryGetProviderId(MetadataProvider.Tmdb, out var id) && !string.IsNullOrWhiteSpace(id))
+            yield return $"*{{tmdb-{id}}}*.*";
 
-        if (item.TryGetProviderId(MetadataProvider.Imdb, out id))
-            yield return $"*imdb-{id}*.*";
+        if (item.TryGetProviderId(MetadataProvider.Imdb, out id) && !string.IsNullOrWhiteSpace(id))
+            yield return $"*{{imdb-{id}}}*.*";
 
-        if (item.TryGetProviderId(MetadataProvider.Tvdb, out id))
-            yield return $"*tvdb-{id}*.*";
+        if (item.TryGetProviderId(MetadataProvider.Tvdb, out id) && !string.IsNullOrWhiteSpace(id))
+            yield return $"*{{tvdb-{id}}}*.*";
     }
 }
