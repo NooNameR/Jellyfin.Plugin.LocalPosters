@@ -20,6 +20,17 @@
                 </div>
 
                 <div class="checkboxContainer checkboxContainer-withDescription advanced"><label class="emby-checkbox-label"> <input
+                    checked="checked" class="chkEnableRealtimeMonitor emby-checkbox" data-embycheckbox="true" id="resizeImageCheckbox"
+                    is="emby-checkbox" type="checkbox"> <span class="checkboxLabel">Enable image resizing</span>
+                    <span
+                        class="checkboxOutline"><span aria-hidden="true"
+                                                      class="material-icons checkboxIcon checkboxIcon-checked check"></span><span
+                        aria-hidden="true" class="material-icons checkboxIcon checkboxIcon-unchecked "></span></span></label>
+                    <div class="fieldDescription checkboxFieldDescription">Enable poster image resizing.
+                    </div>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription advanced"><label class="emby-checkbox-label"> <input
                     type="checkbox" is="emby-checkbox" class="chkEnableRealtimeMonitor emby-checkbox" checked="checked"
                     data-embycheckbox="true" id="enableBorderReplacerCheckbox" onchange="toggleBorderReplacer()"> <span
                     class="checkboxLabel">Enable border replacing</span>
@@ -125,6 +136,7 @@
         // Get DOM elements using individual variables
         const enableBorderReplacerElement = document.getElementById("enableBorderReplacerCheckbox");
         const removeBorderElement = document.getElementById("removeBorderCheckbox");
+        const resizeImageElement = document.getElementById("resizeImageCheckbox");
         const borderColorElement = document.getElementById("borderColorPicker");
         const googleSaCredentialFileElement = document.getElementById("googleSaCredentialFile");
         const googleClientSecretsFileElement = document.getElementById("googleClientSecretsFile");
@@ -137,6 +149,7 @@
             }
             enableBorderReplacerElement.checked = config.EnableBorderReplacer || false;
             removeBorderElement.checked = config.RemoveBorder || false;
+            resizeImageElement.checked = config.ResizeImage || false;
             borderColorElement.value = config.BorderColor || "#000000";
             googleSaCredentialFileElement.value = config.GoogleSaCredentialFile || "";
             googleClientSecretsFileElement.value = config.GoogleClientSecretFile || "";
@@ -272,6 +285,7 @@
 
             config.EnableBorderReplacer = enableBorderReplacerElement.checked;
             config.RemoveBorder = removeBorderElement.checked;
+            config.ResizeImage = resizeImageElement.checked;
             config.BorderColor = borderColorElement.value;
             config.GoogleSaCredentialFile = googleSaCredentialFileElement.value || "";
             config.GoogleClientSecretFile = googleClientSecretsFileElement.value || "";

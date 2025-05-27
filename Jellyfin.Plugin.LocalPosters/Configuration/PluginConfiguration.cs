@@ -27,6 +27,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     ///
     /// </summary>
+    public bool ResizeImage { get; set; } = true;
+
+    /// <summary>
+    ///
+    /// </summary>
     public bool RemoveBorder { get; set; } = true;
 
     /// <summary>

@@ -99,7 +99,10 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     static IImageProcessor CreateBorderReplacer(IServiceProvider provider)
     {
         var pluginConfiguration = provider.GetRequiredService<PluginConfiguration>();
-        var resizer = new SkiaImageResizer(provider.GetRequiredService<ImageSizeProvider>());
+        var resizer = pluginConfiguration.ResizeImage
+            ? new SkiaImageResizer(provider.GetRequiredService<ImageSizeProvider>())
+            : NoopImageResizer.Instance.Value;
+
         if (!pluginConfiguration.EnableBorderReplacer)
             return resizer;
 
