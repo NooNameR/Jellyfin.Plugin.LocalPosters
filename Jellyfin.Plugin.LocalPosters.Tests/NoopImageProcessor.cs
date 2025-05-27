@@ -18,6 +18,7 @@ public class NoopImageProcessor :
         ArgumentNullException.ThrowIfNull(stream);
         var memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
+        memoryStream.Seek(0, SeekOrigin.Begin);
         return memoryStream;
     }
 }
