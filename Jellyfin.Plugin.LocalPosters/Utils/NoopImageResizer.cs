@@ -13,6 +13,9 @@ public class NoopImageResizer : IImageProcessor
 
     public Stream Process(BaseItemKind kind, ImageType imageType, Stream stream)
     {
-        return stream;
+        ArgumentNullException.ThrowIfNull(stream);
+        var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        return memoryStream;
     }
 }
