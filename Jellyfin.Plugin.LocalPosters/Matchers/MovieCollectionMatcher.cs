@@ -16,7 +16,7 @@ public partial class MovieCollectionMatcher : IMatcher
     public MovieCollectionMatcher(string name, string originalName)
     {
         var titles = new[] { name, originalName }.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-        SearchPatterns = titles.Select(x => $"{x.SanitizeName("*")}*Collection*.*".Replace("**", "*", StringComparison.Ordinal))
+        SearchPatterns = titles.Select(x => $"{x.SanitizeName("*")}*.*".Replace("**", "*", StringComparison.Ordinal))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         _names = titles.Select(x => x.SanitizeName()).ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
@@ -39,8 +39,7 @@ public partial class MovieCollectionMatcher : IMatcher
             return false;
 
         var match = CollectionRegex().Match(fileName);
-        var name = match.Groups[1].Value.SanitizeName();
-        return match.Success && _names.Contains(name);
+        return match.Success && _names.Contains(match.Groups[1].Value.SanitizeName());
     }
 
     [GeneratedRegex(@"^(.*? Collection)(?:\s*\{[^}]+\})*\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]

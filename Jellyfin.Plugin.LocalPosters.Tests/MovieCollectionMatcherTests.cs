@@ -15,6 +15,41 @@ public class MovieCollectionMatcherTests
         Assert.True(matcher.IsMatch("Aquaman Collection.jpg"));
     }
 
+
+    [Fact]
+    public void SearchPatternMatchSuccessfully()
+    {
+        const string FileName = "Aquaman Collection.jpg";
+        var folder = Path.GetTempPath();
+        var filePath = Path.Combine(folder, FileName);
+        File.Create(filePath).Dispose();
+        try
+        {
+            const string CollectionName = "Aquaman Collection";
+
+            var matcher = new MovieCollectionMatcher(CollectionName, CollectionName);
+
+            foreach (var searchPattern in matcher.SearchPatterns)
+            {
+                foreach (var file in new DirectoryInfo(folder).EnumerateFiles(searchPattern,
+                             new EnumerationOptions
+                             {
+                                 RecurseSubdirectories = true,
+                                 IgnoreInaccessible = true,
+                                 MatchCasing = MatchCasing.CaseInsensitive,
+                                 AttributesToSkip = FileAttributes.Hidden | FileAttributes.System | FileAttributes.Temporary
+                             }))
+                {
+                    Assert.True(matcher.IsMatch(file.Name));
+                }
+            }
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
     [Fact]
     public void MatchSuccessfullyWithTmdb()
     {
