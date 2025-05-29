@@ -46,8 +46,6 @@ public class MatcherFactory : IMatcherFactory
         [ImageType.Primary, ImageType.Art, ImageType.Backdrop, ImageType.Thumb, ImageType.Banner];
 
 
-    private static readonly HashSet<ImageType> _boxSetImageTypes = [ImageType.Primary, ImageType.Backdrop];
-
     private static readonly HashSet<ImageType> _moviesImageTypes =
     [
         ImageType.Primary,
@@ -68,8 +66,7 @@ public class MatcherFactory : IMatcherFactory
         return item switch
         {
             Series => _seriesImageTypes,
-            Movie => _moviesImageTypes,
-            BoxSet => _boxSetImageTypes,
+            Movie or BoxSet => _moviesImageTypes,
             Season or Episode => [ImageType.Primary],
             _ => throw new NotSupportedException("Not supported item kind")
         };

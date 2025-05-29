@@ -20,6 +20,8 @@ public partial class ArtMatcher : IMatcher
     /// <param name="imageType"></param>
     public ArtMatcher(string name, string originalName, int? year, ImageType imageType)
     {
+        year = year > 0 ? year : null;
+
         var titles = new[] { name, originalName }.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
         SearchPatterns =
             titles.Select(x => $"{x.SanitizeName("*")}*{year}*{imageType}*.*".Replace("**", "*", StringComparison.Ordinal)).ToHashSet();
@@ -49,14 +51,13 @@ public partial class ArtMatcher : IMatcher
         var match = ArtRegex().Match(fileName);
         if (!match.Success) return false;
 
-        if (!int.TryParse(match.Groups[2].Value, out var year)) return false;
         if (!Enum.TryParse<ImageType>(match.Groups[3].Value, out var imageType)) return false;
 
         var name = match.Groups[1].Value.SanitizeName();
 
-        return year == _year && imageType == _imageType && _names.Contains(name);
+        return (!int.TryParse(match.Groups[2].Value, out var year) || year == _year) && imageType == _imageType && _names.Contains(name);
     }
 
-    [GeneratedRegex(@"^(.*?)\s*\((\d{4})\)(?:\s*\{[^}]+\})*\s*-\s*([A-Za-z]+)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.*?)\s*(?:\((\d{4})\))?(?:\s*\{[^}]+\})*\s*-\s*([A-Za-z]+)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]
     private static partial Regex ArtRegex();
 }

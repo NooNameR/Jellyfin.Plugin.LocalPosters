@@ -39,6 +39,26 @@ public sealed class ArtMatcherTests : IDisposable
     }
 
     [Fact]
+    public void MatchSuccessfullyWithoutYear()
+    {
+        const string SeriesName = "Daredevil: Born Again";
+        const string OriginalName = "Daredevil: Born Again";
+        var matcher = new ArtMatcher(SeriesName, OriginalName, null, ImageType.Backdrop);
+
+        Assert.True(matcher.IsMatch("Daredevil- Born Again - Backdrop.jpg"));
+    }
+
+    [Fact]
+    public void MatchSuccessfullyWith0Year()
+    {
+        const string SeriesName = "Daredevil: Born Again";
+        const string OriginalName = "Daredevil: Born Again";
+        var matcher = new ArtMatcher(SeriesName, OriginalName, 0, ImageType.Backdrop);
+
+        Assert.True(matcher.IsMatch("Daredevil- Born Again - Backdrop.jpg"));
+    }
+
+    [Fact]
     public void MatchSuccessfullyWithProviderId()
     {
         const int SeriesYear = 2025;
@@ -59,6 +79,33 @@ public sealed class ArtMatcherTests : IDisposable
         var expectedFileName = "2 Guns (2013) - Backdrop.jpg";
 
         var matcher = new ArtMatcher(MovieName, OriginalName, Year, ImageType.Backdrop);
+
+        var filePath = Path.Combine(_folder.FullName, expectedFileName);
+        await File.Create(filePath).DisposeAsync();
+
+        foreach (var searchPattern in matcher.SearchPatterns)
+        {
+            var files = _folder.EnumerateFiles(searchPattern).ToArray();
+
+            Assert.Single(files);
+
+            Assert.Equal(filePath, files[0].FullName);
+
+            return;
+        }
+
+        Assert.Fail();
+    }
+
+    [Fact]
+    public async Task SearchPatternWorksWellWithoutYear()
+    {
+        const string MovieName = "2 Guns";
+        const string OriginalName = "2 Guns";
+
+        var expectedFileName = "2 Guns - Backdrop.jpg";
+
+        var matcher = new ArtMatcher(MovieName, OriginalName, null, ImageType.Backdrop);
 
         var filePath = Path.Combine(_folder.FullName, expectedFileName);
         await File.Create(filePath).DisposeAsync();
