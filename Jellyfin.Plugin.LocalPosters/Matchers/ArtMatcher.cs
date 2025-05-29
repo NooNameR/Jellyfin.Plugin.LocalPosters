@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.LocalPosters.Matchers;
@@ -35,7 +36,7 @@ public partial class ArtMatcher : IMatcher
     /// </summary>
     /// <param name="item"></param>
     /// <param name="imageType"></param>
-    public ArtMatcher(BaseItem item, ImageType imageType) : this(item.Name, item.OriginalTitle, item.ProductionYear, imageType)
+    public ArtMatcher(BaseItem item, ImageType imageType) : this(item.Name, item.OriginalTitle, GetYear(item), imageType)
     {
     }
 
@@ -56,6 +57,11 @@ public partial class ArtMatcher : IMatcher
         var name = match.Groups[1].Value.SanitizeName();
 
         return (!int.TryParse(match.Groups[2].Value, out var year) || year == _year) && imageType == _imageType && _names.Contains(name);
+    }
+
+    private static int? GetYear(BaseItem item)
+    {
+        return item is BoxSet ? null : item.ProductionYear;
     }
 
     [GeneratedRegex(@"^(.*?)\s*(?:\((\d{4})\))?(?:\s*\{[^}]+\})*\s*-\s*([A-Za-z]+)\s*(\.[a-z]{3,})$", RegexOptions.IgnoreCase)]

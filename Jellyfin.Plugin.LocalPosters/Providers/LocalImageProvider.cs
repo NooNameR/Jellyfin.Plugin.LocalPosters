@@ -75,18 +75,20 @@ public class LocalImageProvider(
             dbSet.Update(record);
         }
 
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
         await using var stream = OpenRead(file.FullName);
         var imageProcessor = serviceScope.ServiceProvider.GetRequiredService<IImageProcessor>();
 
-        return new DynamicImageResponse
+        var response = new DynamicImageResponse
         {
             Stream = imageProcessor.Process(item.GetBaseItemKind(), type, stream),
             HasImage = true,
             Format = ImageFormat.Jpg,
             Protocol = MediaProtocol.File
         };
+
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return response;
     }
 
     /// <inheritdoc />
