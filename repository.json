@@ -8,6 +8,14 @@
     "owner": "jellyfin",
     "versions": [
       {
+        "changelog": "## What's Changed\r\n* ci(deps): bump shogo82148/actions-upload-release-asset from 1.8.0 to 1.8.1 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/44\r\n* chore: Bump Microsoft.NET.Test.Sdk from 17.13.0 to 18.0.0 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/62\r\n* chore: Bump Google.Apis.Drive.v3 from 1.69.0.3783 to 1.71.0.3905 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/58\r\n* ci(deps): bump actions/download-artifact from 4 to 5 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/60\r\n* ci(deps): bump shogo82148/actions-upload-release-asset from 1.8.1 to 1.9.1 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/61\r\n\r\n\r\n**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.1.1.10...0.1.1.11",
+        "checksum": "82691e03a6fd5292750fa4a87d8b42b6",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.1.1.11/local-posters_0.1.1.11.zip",
+        "targetAbi": "10.10.6.0",
+        "timestamp": "2025-10-06T08:42:52Z",
+        "version": "0.1.1.11"
+      },
+      {
         "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.1.1.9...0.1.1.10",
         "checksum": "fec6f0b196b39b1080f92180fab0da3d",
         "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.1.1.10/local-posters_0.1.1.10.zip",
@@ -238,14 +246,6 @@
         "targetAbi": "10.10.0.0",
         "timestamp": "2025-02-17T19:48:27Z",
         "version": "0.0.7.1"
-      },
-      {
-        "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.6.0...0.0.7.0",
-        "checksum": "f170d96853f66144d87d260fd3c6b823",
-        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.7.0/local-posters_0.0.7.0.zip",
-        "targetAbi": "10.10.0.0",
-        "timestamp": "2025-02-17T11:28:41Z",
-        "version": "0.0.7.0"
       }
     ]
   }
