@@ -5,7 +5,7 @@
   <!-- Run "dotnet list package (dash,dash)outdated" to see the latest versions of each package.-->
   <ItemGroup Label="Package Dependencies">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="Google.Apis.Drive.v3" Version="1.71.0.3905" />
+    <PackageVersion Include="Google.Apis.Drive.v3" Version="1.72.0.3938" />
     <PackageVersion Include="Jellyfin.Common" Version="10.10.7" />
     <PackageVersion Include="Jellyfin.Controller" Version="10.10.7" />
     <PackageVersion Include="Jellyfin.Data" Version="10.10.7" />
