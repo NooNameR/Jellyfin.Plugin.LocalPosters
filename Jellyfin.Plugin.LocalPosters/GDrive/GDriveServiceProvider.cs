@@ -82,9 +82,8 @@ public sealed class GDriveServiceProvider(
                 logger.LogDebug("Using Service Account credentials file: {GoogleSaCredentialFile}",
                     saCredentialFile.FullName);
 
-                var credential = (await GoogleCredential.FromFileAsync(saCredentialFile.FullName, cancellationToken)
-                        .ConfigureAwait(false))
-                    .CreateScoped(Scopes);
+                var credential = (await CredentialFactory.FromFileAsync<GoogleCredential>(saCredentialFile.FullName, cancellationToken)
+                    .ConfigureAwait(false)).CreateScoped(Scopes);
 
                 _driveService = new DriveService(new BaseClientService.Initializer
                 {
