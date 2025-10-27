@@ -4,7 +4,7 @@ using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.LocalPosters.Tests;
 
-public class NoopImageProcessor :
+sealed class NoopImageProcessor :
     IImageProcessor
 {
     public static readonly IImageProcessor Instance = new NoopImageProcessor();

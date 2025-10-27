@@ -53,7 +53,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<LocalImageProvider>();
     }
 
-    static SemaphoreSlim GetGDriveDownloadLimiter(IServiceProvider serviceProvider, object _)
+    static SemaphoreSlim GetGDriveDownloadLimiter(IServiceProvider serviceProvider, object? _)
     {
         var configuration = serviceProvider.GetRequiredService<PluginConfiguration>();
         return new SemaphoreSlim(configuration.ConcurrentDownloadLimit);
