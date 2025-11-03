@@ -6,10 +6,10 @@
   <ItemGroup Label="Package Dependencies">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Google.Apis.Drive.v3" Version="1.72.0.3938" />
-    <PackageVersion Include="Jellyfin.Common" Version="10.11.0" />
-    <PackageVersion Include="Jellyfin.Controller" Version="10.11.0" />
-    <PackageVersion Include="Jellyfin.Data" Version="10.11.0" />
-    <PackageVersion Include="Jellyfin.Model" Version="10.11.0" />
+    <PackageVersion Include="Jellyfin.Common" Version="10.11.2" />
+    <PackageVersion Include="Jellyfin.Controller" Version="10.11.2" />
+    <PackageVersion Include="Jellyfin.Data" Version="10.11.2" />
+    <PackageVersion Include="Jellyfin.Model" Version="10.11.2" />
     <PackageVersion Include="IDisposableAnalyzers" Version="4.0.8" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4" />
     <PackageVersion Include="SkiaSharp" Version="3.116.1" />
