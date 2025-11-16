@@ -24,8 +24,9 @@ public class GoogleAuthorizationController(
     IFileSystem fileSystem,
     IDataStore dataStore,
     ILogger<GoogleAuthorizationController> logger) : ControllerBase
+
 {
-    private string? RedirectUrl() => Url.Action("Callback", "GoogleAuthorization", null, Request.Scheme);
+    private string? RedirectUrl() => Url.Action("Callback", "GoogleAuthorization", null, "https");
 
     /// <summary>
     ///
