@@ -51,6 +51,26 @@ public class GoogleAuthorizationController(
             ClientSecrets = clientSecrets.Secrets, Scopes = GDriveServiceProvider.Scopes, DataStore = dataStore, Prompt = "consent"
         });
 
+        if (!HttpContext.Request.IsHttps)
+        {
+            foreach (var header in new[] { "X-Forwarded-Proto", "X-Forwarded-Host", "X-Forwarded-For" })
+            {
+                if (!HttpContext.Request.Headers.TryGetValue(header, out var value))
+                    logger.LogWarning("{HeaderName} header not found", header);
+                else
+                    logger.LogInformation("{HeaderName} header value: {HeaderValue}", header, string.Join(", ", value.ToArray()));
+            }
+
+            if (!HttpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out var proto) ||
+                proto.All(x => !string.Equals(x, "https", StringComparison.OrdinalIgnoreCase)))
+            {
+                logger.LogError(
+                    "Request is not https, please check your reverse proxy configuration: https://jellyfin.org/docs/general/post-install/networking/reverse-proxy");
+
+                return BadRequest("Incorrect reverse proxy setup");
+            }
+        }
+
         var redirectUrl = RedirectUrl();
         var authUrl = flow.CreateAuthorizationCodeRequest(redirectUrl).Build();
         logger.LogInformation("Redirecting to Google API: {AuthUrl}, with callback to: {CallbackUrl}", authUrl, redirectUrl);
