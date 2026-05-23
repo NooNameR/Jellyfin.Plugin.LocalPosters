@@ -8,6 +8,14 @@
     "owner": "jellyfin",
     "versions": [
       {
+        "changelog": "## What's Changed\r\n* chore: Bump Microsoft.NET.Test.Sdk from 18.0.0 to 18.0.1 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/87\r\n* chore: Bump Google.Apis.Drive.v3 from 1.72.0.3944 to 1.72.0.3970 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/80\r\n* chore: Bump Google.Apis.Drive.v3 from 1.72.0.3970 to 1.73.0.3996 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/102\r\n\r\n\r\n**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.2.0.1...0.2.0.2",
+        "checksum": "2162c3d1cc6e92a641b122400d476f73",
+        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.2.0.2/local-posters_0.2.0.2.zip",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-05-23T08:36:10Z",
+        "version": "0.2.0.2"
+      },
+      {
         "changelog": "## What's Changed\r\n* ci(deps): bump actions/download-artifact from 5 to 6 by @dependabot[bot] in https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/pull/70\r\n\r\n\r\n**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.2.0.0...0.2.0.1",
         "checksum": "a6e85349d9de8e42dfc074378abaa136",
         "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.2.0.1/local-posters_0.2.0.1.zip",
@@ -238,14 +246,6 @@
         "targetAbi": "10.10.6.0",
         "timestamp": "2025-02-19T14:33:49Z",
         "version": "0.0.7.4"
-      },
-      {
-        "changelog": "**Full Changelog**: https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/compare/0.0.7.2...0.0.7.3",
-        "checksum": "6a2c2c22e7784c422a63b1c4ff2406e2",
-        "sourceUrl": "https://github.com/NooNameR/Jellyfin.Plugin.LocalPosters/releases/download/0.0.7.3/local-posters_0.0.7.3.zip",
-        "targetAbi": "10.10.0.0",
-        "timestamp": "2025-02-18T09:32:22Z",
-        "version": "0.0.7.3"
       }
     ]
   }
