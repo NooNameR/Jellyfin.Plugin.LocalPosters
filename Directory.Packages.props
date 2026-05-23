@@ -4,18 +4,18 @@
   </PropertyGroup>
   <!-- Run "dotnet list package (dash,dash)outdated" to see the latest versions of each package.-->
   <ItemGroup Label="Package Dependencies">
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="Google.Apis.Drive.v3" Version="1.73.0.3996" />
-    <PackageVersion Include="Jellyfin.Common" Version="10.11.0" />
-    <PackageVersion Include="Jellyfin.Controller" Version="10.11.0" />
-    <PackageVersion Include="Jellyfin.Data" Version="10.11.0" />
-    <PackageVersion Include="Jellyfin.Model" Version="10.11.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="Google.Apis.Drive.v3" Version="1.74.0.4135" />
+    <PackageVersion Include="Jellyfin.Common" Version="10.11.9" />
+    <PackageVersion Include="Jellyfin.Controller" Version="10.11.9" />
+    <PackageVersion Include="Jellyfin.Data" Version="10.11.9" />
+    <PackageVersion Include="Jellyfin.Model" Version="10.11.9" />
     <PackageVersion Include="IDisposableAnalyzers" Version="4.0.8" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4" />
     <PackageVersion Include="SkiaSharp" Version="3.116.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
   </ItemGroup>
 </Project>
